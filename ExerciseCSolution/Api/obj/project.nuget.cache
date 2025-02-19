@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "dgSpecHash": "AQdZwX4b4Bg=",
+  "success": true,
+  "projectFilePath": "/home/alex/src/fs25/fs25_8_2/ExerciseCSolution/Api/Api.csproj",
+  "expectedPackageFiles": [
+    "/home/alex/.nuget/packages/fleck/1.2.0/fleck.1.2.0.nupkg.sha512",
+    "/home/alex/.nuget/packages/microsoft.extensions.logging.abstractions/7.0.1/microsoft.extensions.logging.abstractions.7.0.1.nupkg.sha512",
+    "/home/alex/.nuget/packages/pipelines.sockets.unofficial/2.2.8/pipelines.sockets.unofficial.2.2.8.nupkg.sha512",
+    "/home/alex/.nuget/packages/stackexchange.redis/2.8.24/stackexchange.redis.2.8.24.nupkg.sha512",
+    "/home/alex/.nuget/packages/system.io.pipelines/5.0.1/system.io.pipelines.5.0.1.nupkg.sha512",
+    "/home/alex/.nuget/packages/system.reactive/6.0.0/system.reactive.6.0.0.nupkg.sha512",
+    "/home/alex/.nuget/packages/system.threading.channels/7.0.0/system.threading.channels.7.0.0.nupkg.sha512",
+    "/home/alex/.nuget/packages/uldahlalex.websocket.boilerplate/2.3.1/uldahlalex.websocket.boilerplate.2.3.1.nupkg.sha512",
+    "/home/alex/.nuget/packages/websocket.client/5.0.0/websocket.client.5.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
