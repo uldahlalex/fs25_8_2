@@ -1,12 +1,13 @@
-using System.Text.Json;
+using System;
+using System.Threading.Tasks;
 using Api;
-using Api.EventHandlers;
 using Api.EventHandlers.Dtos;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WebSocketBoilerplate;
+using Xunit;
 
 namespace Tests;
 

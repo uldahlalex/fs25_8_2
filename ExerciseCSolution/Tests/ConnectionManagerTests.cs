@@ -1,18 +1,19 @@
-using System.Text.Json;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Api;
+using Application.Models;
 using Fleck;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using Xunit;
 
 namespace Tests;
 
 public class ConnectionManagerTests
 {
     private readonly DictionaryConnectionManager _dictionaryManager;
-    private readonly AppOptions _appOptions;
 
     public ConnectionManagerTests()
     {

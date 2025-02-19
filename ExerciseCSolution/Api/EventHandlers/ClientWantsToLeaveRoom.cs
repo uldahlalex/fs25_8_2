@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Api.EventHandlers.Dtos;
 using Fleck;
 using WebSocketBoilerplate;

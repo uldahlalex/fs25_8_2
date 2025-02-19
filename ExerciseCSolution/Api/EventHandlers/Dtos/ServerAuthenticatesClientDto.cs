@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using WebSocketBoilerplate;
 
 namespace Api.EventHandlers.Dtos;
