@@ -1,0 +1,4 @@
+- NUnit Text Fixture
+- Reconnect cases for redis state restore
+- Client ID to user ID mapping
+- WebAppfactory for unit tests aswell in order to use DI contianer all the way through

@@ -1,32 +1,31 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Collections;
 using Api;
-using Application.Models;
 using Fleck;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
-using Xunit;
 
 namespace Tests;
 
-public class ConnectionManagerTests
-{
-    private readonly DictionaryConnectionManager _dictionaryManager;
 
-    public ConnectionManagerTests()
+public class ConnectionManagerTests(ITestOutputHelper outputHelper) : WebApplicationFactory<Program>
+{
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        var loggerFactory = new LoggerFactory();
-        var dictionaryLogger = new Logger<DictionaryConnectionManager>(loggerFactory);
-        _dictionaryManager = new DictionaryConnectionManager(dictionaryLogger);
+        builder.ConfigureLogging(logging =>
+        {
+            logging.ClearProviders();
+            logging.AddXUnit(outputHelper);
+        });
     }
 
     [Fact]
     public async Task OnConnect_Can_Add_Socket_And_Client_To_Storage()
     {
         // arrange
-        var manager = _dictionaryManager;
+        var manager = Services.GetRequiredService<IConnectionManager>();
 
         var connectionId = Guid.NewGuid().ToString();
         var socketId = Guid.NewGuid();
@@ -46,7 +45,7 @@ public class ConnectionManagerTests
     public async Task OnClose_Can_Remove_Socket_And_Client_From_Storage()
     {
         // arrange
-        var manager = _dictionaryManager;
+        var manager = Services.GetRequiredService<IConnectionManager>();
 
         var connectionId = Guid.NewGuid().ToString();
         var socketId = Guid.NewGuid();
@@ -62,6 +61,4 @@ public class ConnectionManagerTests
         Assert.DoesNotContain(manager.ConnectionIdToSocket.Values, s => s.ConnectionInfo.Id == socketId);
         Assert.DoesNotContain(manager.SocketToConnectionId.Values, c => c == connectionId);
     }
-
-
 }

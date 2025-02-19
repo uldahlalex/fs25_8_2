@@ -1,7 +1,5 @@
 using System.Reflection;
 using Application.Models;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using WebSocketBoilerplate;
@@ -16,8 +14,7 @@ public class Program
         
         builder.Services.AddOptionsWithValidateOnStart<AppOptions>()
             .Bind(builder.Configuration.GetSection(nameof(AppOptions)));
-        var appOptions = builder.Services
-            .BuildServiceProvider()
+        var appOptions = builder.Services.BuildServiceProvider()
             .GetRequiredService<IOptionsMonitor<AppOptions>>()
             .CurrentValue;
         
@@ -35,11 +32,7 @@ public class Program
             Password = appOptions.REDIS_PASSWORD
         };
 
-        builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-        {
-            var multiplexer = ConnectionMultiplexer.Connect(redisConfig);
-            return multiplexer;
-        });
+        builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConfig));
         builder.Services.AddSingleton<IConnectionManager, RedisConnectionManager>();
         builder.Services.AddSingleton<CustomWebSocketServer>();
         builder.Services.InjectEventHandlers(Assembly.GetExecutingAssembly());
