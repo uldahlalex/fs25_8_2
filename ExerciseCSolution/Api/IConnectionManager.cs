@@ -9,6 +9,7 @@ namespace Api;
 
 public interface IConnectionManager
 {
+    Task<Dictionary<string, string>> GetAllSocketIdsWithConnectionId();
     ConcurrentDictionary<string, IWebSocketConnection> ConnectionIdToSocket { get; }
     ConcurrentDictionary<string, string> SocketToConnectionId { get; }
     public Task<ConcurrentDictionary<string, HashSet<string>>> GetAllTopicsWithMembers();

@@ -6,23 +6,34 @@ using WebSocketBoilerplate;
 
 namespace Api.EventHandlers;
 
-public class ClientWantsToJoinRoomEventHandler(IConnectionManager connectionManager) : BaseEventHandler<ClientWantsToJoinRoomDto>
+public class ClientWantsToJoinRoomEventHandler : BaseEventHandler<ClientWantsToJoinRoomDto>
 {
+    private readonly IConnectionManager _connectionManager;
+    
+    public ClientWantsToJoinRoomEventHandler(IConnectionManager connectionManager)
+    {
+        _connectionManager = connectionManager;
+    }
+
     public override async Task Handle(ClientWantsToJoinRoomDto dto, IWebSocketConnection socket)
     {
-        var result = connectionManager.SocketToConnectionId.TryGetValue(socket.ConnectionInfo.Id.ToString(), out var clientId);
-        if(!result || clientId == null)
+        var socketId = socket.ConnectionInfo.Id.ToString();
+        var connections = await _connectionManager.GetAllSocketIdsWithConnectionId();
+        
+        if (!connections.TryGetValue(socketId, out var clientId))
         {
-            throw new InvalidOperationException("No client ID found for socket " + clientId);
+            throw new InvalidOperationException($"No client ID found for socket {socketId}");
         }
-        await connectionManager.AddToTopic(dto.RoomId, 
-            clientId);
-        var response = new ServerConfirmsJoinRoomDto()
+
+        await _connectionManager.AddToTopic(dto.RoomId, clientId);
+        
+        var response = new ServerConfirmsJoinRoomDto
         {
             RoomId = dto.RoomId,
             Success = true,
             requestId = dto.requestId
         };
+        
         socket.SendDto(response);
     }
 }
