@@ -14,22 +14,23 @@ public class RedisConnectionManager : IConnectionManager
     private const string TOPIC_MEMBERS = "topic:members:"; // topic:members:{topicId} -> Set<memberId>
     private const string MEMBER_TOPICS = "member:topics:"; // member:topics:{memberId} -> Set<topicId>
 
+
     // Keep socket connections in memory since they can't be serialized
     private readonly ConcurrentDictionary<string, IWebSocketConnection> _connections = new();
     private readonly IDatabase _db;
     private readonly ILogger<RedisConnectionManager> _logger;
     private readonly IConnectionMultiplexer _redis;
-
-    private readonly string[] InitialTopicIds = new[] { "device/A", "room/A" };
-
+    
     public RedisConnectionManager(IConnectionMultiplexer redis, ILogger<RedisConnectionManager> logger)
     {
         _redis = redis;
         _db = redis.GetDatabase();
         _logger = logger;
 
-        // Initialize topics
-        foreach (var topicId in InitialTopicIds) _db.SetAdd($"{TOPIC_MEMBERS}{topicId}", Array.Empty<RedisValue>());
+        var server = redis.GetServer(redis.GetEndPoints().First());
+        server.Keys(pattern: "*").ToList().ForEach(key => _db.KeyDelete(key));
+
+
     }
 
     public ConcurrentDictionary<string, IWebSocketConnection> ConnectionIdToSocket { get; }
@@ -39,18 +40,19 @@ public class RedisConnectionManager : IConnectionManager
     {
         var result = new ConcurrentDictionary<string, HashSet<string>>();
         var server = _redis.GetServer(_redis.GetEndPoints().First());
-        var keys = server.Keys(pattern: $"{TOPIC_MEMBERS}*");
-
-        foreach (var key in keys)
+    
+        var topicKeys = server.Keys(pattern: $"{TOPIC_MEMBERS}*");
+    
+        foreach (var key in topicKeys)
         {
             var topic = key.ToString().Replace(TOPIC_MEMBERS, "");
             var members = await _db.SetMembersAsync(key);
-            result[topic] = new HashSet<string>(members.Select(m => m.ToString()));
+            var memberSet = new HashSet<string>(members.Select(m => m.ToString()));
+            result.TryAdd(topic, memberSet);
         }
 
         return result;
     }
-
 
     public async Task<ConcurrentDictionary<string, HashSet<string>>> GetAllMembersWithTopics()
     {
@@ -102,6 +104,9 @@ public class RedisConnectionManager : IConnectionManager
 
     public async Task AddToTopic(string topic, string memberId, TimeSpan? expiry = null)
     {
+        if (expiry is null)
+            expiry = TimeSpan.FromMinutes(60);
+
         var tx = _db.CreateTransaction();
 
         tx.SetAddAsync($"{TOPIC_MEMBERS}{topic}", memberId);

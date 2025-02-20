@@ -10,12 +10,10 @@ public class DictionaryConnectionManager : IConnectionManager
     private readonly ILogger<DictionaryConnectionManager> _logger;
 
 
-    private readonly string[] InitialTopicIds = new[] { "device/A", "room/A" }; //just some examples here
 
     public DictionaryConnectionManager(ILogger<DictionaryConnectionManager> logger)
     {
         _logger = logger;
-        foreach (var topicId in InitialTopicIds) TopicMembers.TryAdd(topicId, new HashSet<string>());
     }
 
     public ConcurrentDictionary<string, HashSet<string>> TopicMembers { get; set; } = new();
