@@ -1,34 +1,27 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Fleck;
-using Microsoft.Extensions.Logging;
 using WebSocketBoilerplate;
 
 namespace Api;
 
 public class DictionaryConnectionManager : IConnectionManager
 {
-    public ConcurrentDictionary<string /* Client ID */, IWebSocketConnection> ConnectionIdToSocket { get; } = new();
-    public ConcurrentDictionary<string /* Socket ID */, string /* Client ID */> SocketToConnectionId { get; } = new();
-    public ConcurrentDictionary<string, HashSet<string>> TopicMembers { get; set; } = new();
-    public ConcurrentDictionary<string, HashSet<string>> MemberTopics { get; set; } = new();
-
-
-    private string[] InitialTopicIds = new[] { "device/A", "room/A" }; //just some examples here
     private readonly ILogger<DictionaryConnectionManager> _logger;
+
+
+    private readonly string[] InitialTopicIds = new[] { "device/A", "room/A" }; //just some examples here
 
     public DictionaryConnectionManager(ILogger<DictionaryConnectionManager> logger)
     {
         _logger = logger;
-        foreach (var topicId in InitialTopicIds)
-        {
-            TopicMembers.TryAdd(topicId, new HashSet<string>());
-        }
+        foreach (var topicId in InitialTopicIds) TopicMembers.TryAdd(topicId, new HashSet<string>());
     }
+
+    public ConcurrentDictionary<string, HashSet<string>> TopicMembers { get; set; } = new();
+    public ConcurrentDictionary<string, HashSet<string>> MemberTopics { get; set; } = new();
+    public ConcurrentDictionary<string /* Client ID */, IWebSocketConnection> ConnectionIdToSocket { get; } = new();
+    public ConcurrentDictionary<string /* Socket ID */, string /* Client ID */> SocketToConnectionId { get; } = new();
 
     public Task<ConcurrentDictionary<string, HashSet<string>>> GetAllTopicsWithMembers()
     {
@@ -83,20 +76,16 @@ public class DictionaryConnectionManager : IConnectionManager
     public Task RemoveFromTopic(string topic, string memberId)
     {
         if (TopicMembers.TryGetValue(topic, out var members))
-        {
             lock (members)
             {
                 members.Remove(memberId);
             }
-        }
 
         if (MemberTopics.TryGetValue(memberId, out var topics))
-        {
             lock (topics)
             {
                 topics.Remove(topic);
             }
-        }
 
         return Task.CompletedTask;
     }
@@ -154,12 +143,8 @@ public class DictionaryConnectionManager : IConnectionManager
 
         // Clean up topics
         if (MemberTopics.TryGetValue(clientId, out var topics))
-        {
             foreach (var topic in topics)
-            {
                 await RemoveFromTopic(topic, clientId);
-            }
-        }
 
         MemberTopics.TryRemove(clientId, out _);
     }
@@ -171,10 +156,8 @@ public class DictionaryConnectionManager : IConnectionManager
             _logger.LogWarning($"No topic found: {topic}");
             return;
         }
-        foreach (var memberId in members.ToList())
-        {
-            await BroadcastToMember(topic, memberId, message);
-        }
+
+        foreach (var memberId in members.ToList()) await BroadcastToMember(topic, memberId, message);
     }
 
     private async Task BroadcastToMember<T>(string topic, string memberId, T message) where T : BaseDto
@@ -207,7 +190,7 @@ public class DictionaryConnectionManager : IConnectionManager
             SocketToCnnectionId = await GetAllSocketIdsWithConnectionId(),
             TopicsWithMembers = await GetAllTopicsWithMembers(),
             MembersWithTopics = await GetAllMembersWithTopics()
-        }, new JsonSerializerOptions()
+        }, new JsonSerializerOptions
         {
             WriteIndented = true
         }));

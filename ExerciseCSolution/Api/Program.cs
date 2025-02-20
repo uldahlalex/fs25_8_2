@@ -1,5 +1,4 @@
 using System.Reflection;
-using Application.Models;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using WebSocketBoilerplate;
@@ -11,13 +10,13 @@ public class Program
     public static void Main()
     {
         var builder = WebApplication.CreateBuilder();
-        
+
         builder.Services.AddOptionsWithValidateOnStart<AppOptions>()
             .Bind(builder.Configuration.GetSection(nameof(AppOptions)));
         var appOptions = builder.Services.BuildServiceProvider()
             .GetRequiredService<IOptionsMonitor<AppOptions>>()
             .CurrentValue;
-        
+
         var redisConfig = new ConfigurationOptions
         {
             AbortOnConnectFail = false,

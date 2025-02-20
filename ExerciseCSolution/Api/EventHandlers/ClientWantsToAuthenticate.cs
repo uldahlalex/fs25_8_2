@@ -1,30 +1,24 @@
-using System;
 using System.Security.Authentication;
-using System.Threading.Tasks;
 using Api.EventHandlers.Dtos;
 using Fleck;
-using Microsoft.Extensions.Logging;
 using WebSocketBoilerplate;
 
 namespace Api.EventHandlers;
 
-public class ClientWantsToAuthenticate(IConnectionManager manager, ILogger<ClientWantsToAuthenticate> logger) 
-    : BaseEventHandler<ClientWantsToAuthenticateDto> 
+public class ClientWantsToAuthenticate(IConnectionManager manager, ILogger<ClientWantsToAuthenticate> logger)
+    : BaseEventHandler<ClientWantsToAuthenticateDto>
 {
     public override async Task Handle(ClientWantsToAuthenticateDto dto, IWebSocketConnection socket)
     {
         var result = manager.SocketToConnectionId.TryGetValue(socket.ConnectionInfo.Id.ToString(), out var clientId);
-        if(!result || clientId == null)
-        {
-            throw new InvalidOperationException("No client ID found for socket");
-        }
+        if (!result || clientId == null) throw new InvalidOperationException("No client ID found for socket");
 
         if (!Login(dto)) throw new AuthenticationException("Invalid login!");
-        
+
         await manager.AddToTopic("authenticated", clientId);
         var topics = await manager.GetTopicsFromMemberId(clientId);
-        
-        var response = new ServerAuthenticatesClientDto { Topics = topics, requestId = dto.requestId};
+
+        var response = new ServerAuthenticatesClientDto { Topics = topics, requestId = dto.requestId };
         socket.SendDto(response);
     }
 

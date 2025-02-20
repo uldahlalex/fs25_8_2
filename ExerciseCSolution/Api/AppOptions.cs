@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Application.Models;
+namespace Api;
 
 public sealed class AppOptions
 {

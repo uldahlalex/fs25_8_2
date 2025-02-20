@@ -1,31 +1,26 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Api;
 using Fleck;
-using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using WebSocketBoilerplate;
 
+namespace Api;
+
 public class RedisConnectionManager : IConnectionManager
 {
-    private readonly IConnectionMultiplexer _redis;
-    private readonly IDatabase _db;
-    private readonly ILogger<RedisConnectionManager> _logger;
-    
+    // Redis key prefixes
+    private const string CONNECTION_TO_SOCKET = "conn:socket:"; // conn:socket:{clientId} -> socketId
+    private const string SOCKET_TO_CONNECTION = "socket:conn:"; // socket:conn:{socketId} -> clientId
+    private const string TOPIC_MEMBERS = "topic:members:"; // topic:members:{topicId} -> Set<memberId>
+    private const string MEMBER_TOPICS = "member:topics:"; // member:topics:{memberId} -> Set<topicId>
+
     // Keep socket connections in memory since they can't be serialized
     private readonly ConcurrentDictionary<string, IWebSocketConnection> _connections = new();
-    
-    private string[] InitialTopicIds = new[] { "device/A", "room/A" };
+    private readonly IDatabase _db;
+    private readonly ILogger<RedisConnectionManager> _logger;
+    private readonly IConnectionMultiplexer _redis;
 
-    // Redis key prefixes
-    private const string CONNECTION_TO_SOCKET = "conn:socket:";    // conn:socket:{clientId} -> socketId
-    private const string SOCKET_TO_CONNECTION = "socket:conn:";    // socket:conn:{socketId} -> clientId
-    private const string TOPIC_MEMBERS = "topic:members:";         // topic:members:{topicId} -> Set<memberId>
-    private const string MEMBER_TOPICS = "member:topics:";         // member:topics:{memberId} -> Set<topicId>
+    private readonly string[] InitialTopicIds = new[] { "device/A", "room/A" };
 
     public RedisConnectionManager(IConnectionMultiplexer redis, ILogger<RedisConnectionManager> logger)
     {
@@ -34,10 +29,7 @@ public class RedisConnectionManager : IConnectionManager
         _logger = logger;
 
         // Initialize topics
-        foreach (var topicId in InitialTopicIds)
-        {
-            _db.SetAdd($"{TOPIC_MEMBERS}{topicId}", Array.Empty<RedisValue>());
-        }
+        foreach (var topicId in InitialTopicIds) _db.SetAdd($"{TOPIC_MEMBERS}{topicId}", Array.Empty<RedisValue>());
     }
 
     public ConcurrentDictionary<string, IWebSocketConnection> ConnectionIdToSocket { get; }
@@ -86,10 +78,7 @@ public class RedisConnectionManager : IConnectionManager
         {
             var clientId = key.ToString().Replace(CONNECTION_TO_SOCKET, "");
             var socketId = await _db.StringGetAsync(key);
-            if (!socketId.IsNull)
-            {
-                result[clientId] = socketId.ToString();
-            }
+            if (!socketId.IsNull) result[clientId] = socketId.ToString();
         }
 
         return result;
@@ -105,10 +94,7 @@ public class RedisConnectionManager : IConnectionManager
         {
             var socketId = key.ToString().Replace(SOCKET_TO_CONNECTION, "");
             var clientId = await _db.StringGetAsync(key);
-            if (!clientId.IsNull)
-            {
-                result[socketId] = clientId.ToString();
-            }
+            if (!clientId.IsNull) result[socketId] = clientId.ToString();
         }
 
         return result;
@@ -117,10 +103,10 @@ public class RedisConnectionManager : IConnectionManager
     public async Task AddToTopic(string topic, string memberId, TimeSpan? expiry = null)
     {
         var tx = _db.CreateTransaction();
-        
+
         tx.SetAddAsync($"{TOPIC_MEMBERS}{topic}", memberId);
         tx.SetAddAsync($"{MEMBER_TOPICS}{memberId}", topic);
-        
+
         if (expiry.HasValue)
         {
             tx.KeyExpireAsync($"{TOPIC_MEMBERS}{topic}", expiry.Value);
@@ -156,7 +142,7 @@ public class RedisConnectionManager : IConnectionManager
         _logger.LogInformation($"OnOpen called with clientId: {clientId} and socketId: {socket.ConnectionInfo.Id}");
 
         var socketId = socket.ConnectionInfo.Id.ToString();
-        
+
         // Clean up old connection if exists
         var oldSocketId = await _db.StringGetAsync($"{CONNECTION_TO_SOCKET}{clientId}");
         if (!oldSocketId.IsNull)
@@ -173,7 +159,7 @@ public class RedisConnectionManager : IConnectionManager
         await tx.ExecuteAsync();
 
         _connections[clientId] = socket;
-        
+
         _logger.LogInformation($"Added new connection {socketId} for client {clientId}");
         await LogCurrentState();
     }
@@ -181,7 +167,7 @@ public class RedisConnectionManager : IConnectionManager
     public async Task OnClose(IWebSocketConnection socket, string clientId)
     {
         var socketId = socket.ConnectionInfo.Id.ToString();
-        
+
         // Verify this is still the current socket for this client
         var currentSocketId = await _db.StringGetAsync($"{CONNECTION_TO_SOCKET}{clientId}");
         if (!currentSocketId.IsNull && currentSocketId.ToString() == socketId)
@@ -196,10 +182,7 @@ public class RedisConnectionManager : IConnectionManager
 
             // Clean up topics
             var topics = await GetTopicsFromMemberId(clientId);
-            foreach (var topic in topics)
-            {
-                await RemoveFromTopic(topic, clientId);
-            }
+            foreach (var topic in topics) await RemoveFromTopic(topic, clientId);
             await _db.KeyDeleteAsync($"{MEMBER_TOPICS}{clientId}");
         }
     }
@@ -213,10 +196,7 @@ public class RedisConnectionManager : IConnectionManager
             return;
         }
 
-        foreach (var memberId in members)
-        {
-            await BroadcastToMember(topic, memberId, message);
-        }
+        foreach (var memberId in members) await BroadcastToMember(topic, memberId, message);
     }
 
     private async Task BroadcastToMember<T>(string topic, string memberId, T message) where T : BaseDto

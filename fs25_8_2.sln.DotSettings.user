@@ -6,5 +6,11 @@
   &lt;Or&gt;
     &lt;ProjectFile&gt;E24AA57A-135C-44D4-9828-5D66E367D0F3/f:ApiTests.cs&lt;/ProjectFile&gt;
     &lt;ProjectFile&gt;E24AA57A-135C-44D4-9828-5D66E367D0F3/f:ConnectionManagerTests.cs&lt;/ProjectFile&gt;
+    &lt;TestAncestor&gt;
+      &lt;TestId&gt;NUnit3x::FC032E05-8240-420B-945F-8C8CB9B1A5D9::net8.0::ConnectionManagerTests(1,2).Test1&lt;/TestId&gt;
+      &lt;TestId&gt;NUnit3x::FC032E05-8240-420B-945F-8C8CB9B1A5D9::net8.0::ConnectionManagerTests&lt;/TestId&gt;
+      &lt;TestId&gt;NUnit3x::FC032E05-8240-420B-945F-8C8CB9B1A5D9::net8.0::Tests.ApiTests.Api_Can_Successfully_Add_Connection&lt;/TestId&gt;
+      &lt;TestId&gt;NUnit3x::FC032E05-8240-420B-945F-8C8CB9B1A5D9::net8.0::Tests.ConnectionManagerTests&lt;/TestId&gt;
+    &lt;/TestAncestor&gt;
   &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
