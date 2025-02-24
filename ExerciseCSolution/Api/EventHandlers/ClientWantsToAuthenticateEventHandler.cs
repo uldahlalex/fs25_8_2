@@ -5,13 +5,12 @@ using WebSocketBoilerplate;
 
 namespace Api.EventHandlers;
 
-public class ClientWantsToAuthenticate(IConnectionManager manager, ILogger<ClientWantsToAuthenticate> logger)
+public class ClientWantsToAuthenticateEventHandler(IConnectionManager manager, ILogger<ClientWantsToAuthenticateEventHandler> logger)
     : BaseEventHandler<ClientWantsToAuthenticateDto>
 {
     public override async Task Handle(ClientWantsToAuthenticateDto dto, IWebSocketConnection socket)
     {
-        var result = manager.SocketToConnectionId.TryGetValue(socket.ConnectionInfo.Id.ToString(), out var clientId);
-        if (!result || clientId == null) throw new InvalidOperationException("No client ID found for socket");
+        var clientId = await manager.GetClientIdFromSocketId(socket.ConnectionInfo.Id.ToString());
 
         if (!Login(dto)) throw new AuthenticationException("Invalid login!");
 

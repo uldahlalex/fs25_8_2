@@ -1,6 +1,9 @@
 using System.Reflection;
+using Api.Websocket.Documentation;
 using Microsoft.Extensions.Options;
+using Scalar.AspNetCore;
 using StackExchange.Redis;
+using Startup.Extensions;
 using WebSocketBoilerplate;
 
 namespace Api;
@@ -35,8 +38,16 @@ public class Program
         builder.Services.AddSingleton<IConnectionManager, RedisConnectionManager>();
         builder.Services.AddSingleton<CustomWebSocketServer>();
         builder.Services.InjectEventHandlers(Assembly.GetExecutingAssembly());
+        builder.Services.AddOpenApiDocument(conf =>
+        {
+            conf.DocumentProcessors.Add(new AddAllDerivedTypesProcessor());
+            conf.DocumentProcessors.Add(new AddStringConstantsProcessor());
+        });
         var app = builder.Build();
         app.Services.GetRequiredService<CustomWebSocketServer>().Start(app);
+        app.UseOpenApi();
+        app.MapScalarApiReference();
+        app.GenerateTypeScriptClient("v1").GetAwaiter().GetResult();
         app.Run();
     }
 }

@@ -10,7 +10,6 @@ public class DictionaryConnectionManager : IConnectionManager
     private readonly ILogger<DictionaryConnectionManager> _logger;
 
 
-
     public DictionaryConnectionManager(ILogger<DictionaryConnectionManager> logger)
     {
         _logger = logger;
@@ -102,6 +101,14 @@ public class DictionaryConnectionManager : IConnectionManager
             MemberTopics.TryGetValue(memberId, out var topics)
                 ? topics.ToList()
                 : new List<string>());
+    }
+
+    public Task<string> GetClientIdFromSocketId(string socketId)
+    {
+        var success = SocketToConnectionId.TryGetValue(socketId, out var connectionId);
+        if (success)
+            return Task.FromResult(connectionId!);
+        throw new Exception("Could not find client ID for socket ID " + socketId);
     }
 
 

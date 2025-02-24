@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Api;
 using Fleck;
 using Microsoft.AspNetCore.Hosting;
@@ -11,15 +10,14 @@ namespace NUnit;
 
 [TestFixture(typeof(RedisConnectionManager))]
 [TestFixture(typeof(DictionaryConnectionManager))]
-public class ConnectionManagerTests(Type connectionManagerType) : WebApplicationFactory<Program>
+public class ConnectionManagerWithMockedConnections(Type connectionManagerType) : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
         {
-            var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IConnectionManager));
-            if (descriptor != null) services.Remove(descriptor);
-
+            services.Remove(services.SingleOrDefault(d => d.ServiceType == typeof(IConnectionManager)) ??
+                            throw new Exception("Could not find instance of " + nameof(IConnectionManager)));
             services.AddSingleton(typeof(IConnectionManager), connectionManagerType);
         });
     }
@@ -41,11 +39,10 @@ public class ConnectionManagerTests(Type connectionManagerType) : WebApplication
 
         // assert
         if (!manager.GetAllConnectionIdsWithSocketId().Result.Values.Contains(ws.ConnectionInfo.Id.ToString()))
-            throw new Exception("The dictionary " + nameof(manager.ConnectionIdToSocket) +
-                                " should contain the websocket with guid " + ws.ConnectionInfo.Id +
+            throw new Exception("The dictionary should contain the websocket with guid " + ws.ConnectionInfo.Id +
                                 " as the first value");
         if (!manager.GetAllSocketIdsWithConnectionId().Result.Values.Contains(connectionId))
-            throw new Exception("The dictionary " + nameof(manager.SocketToConnectionId) +
+            throw new Exception("The dictionary " + nameof(manager.GetAllSocketIdsWithConnectionId) +
                                 " should contain the connectionId with guid " + connectionId +
                                 " as the first value");
     }
@@ -68,11 +65,9 @@ public class ConnectionManagerTests(Type connectionManagerType) : WebApplication
 
         // assert
         if (manager.GetAllConnectionIdsWithSocketId().Result.Values.Contains(ws.ConnectionInfo.Id.ToString()))
-            throw new Exception("The dictionary " + nameof(manager.ConnectionIdToSocket) +
-                                " should not contain the websocket with guid " + ws.ConnectionInfo.Id);
+            throw new Exception("The dictionary should not contain the websocket with guid " + ws.ConnectionInfo.Id);
         if (manager.GetAllSocketIdsWithConnectionId().Result.Values.Contains(connectionId))
-            throw new Exception("The dictionary " + nameof(manager.SocketToConnectionId) +
-                                " should not contain the connectionId with guid " + connectionId);
+            throw new Exception("The dictionary should not contain the connectionId with guid " + connectionId);
     }
 
     [Test]
@@ -80,14 +75,14 @@ public class ConnectionManagerTests(Type connectionManagerType) : WebApplication
     {
         var randomTopic = Guid.NewGuid().ToString();
         var randomUser = Guid.NewGuid().ToString();
-        
+
         var manager = Services.GetRequiredService<IConnectionManager>();
         await manager.AddToTopic(randomTopic, randomUser);
-        
+
         var members = await manager.GetMembersFromTopicId(randomTopic);
         if (!members.Contains(randomUser))
             throw new Exception("The topic " + randomTopic + " should contain the user " + randomUser);
-        
+
         var topics = await manager.GetTopicsFromMemberId(randomUser);
         if (!topics.Contains(randomTopic))
             throw new Exception("The user " + randomUser + " should be in the topic " + randomTopic);
@@ -98,17 +93,16 @@ public class ConnectionManagerTests(Type connectionManagerType) : WebApplication
     {
         var randomTopic = Guid.NewGuid().ToString();
         var randomUser = Guid.NewGuid().ToString();
-        
+
         var manager = Services.GetRequiredService<IConnectionManager>();
         await manager.AddToTopic(randomTopic, randomUser);
         await manager.RemoveFromTopic(randomTopic, randomUser);
-        
+
         var members = await manager.GetMembersFromTopicId(randomTopic);
         if (members.Contains(randomUser))
             throw new Exception("The topic " + randomTopic + " should not contain the user " + randomUser);
         var topicsFromMemberId = await manager.GetTopicsFromMemberId(randomUser);
         if (topicsFromMemberId.Contains(randomTopic))
             throw new Exception("The user " + randomUser + " should not be in the topic " + randomTopic);
-
     }
 }
