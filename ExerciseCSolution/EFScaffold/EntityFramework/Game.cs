@@ -11,7 +11,9 @@ public partial class Game
 
     public virtual ICollection<Gameround> Gamerounds { get; set; } = new List<Gameround>();
 
-    public virtual ICollection<Player> Players { get; set; } = new List<Player>();
+    public virtual ICollection<Playeranswer> Playeranswers { get; set; } = new List<Playeranswer>();
 
     public virtual Gametemplate? TemplateNavigation { get; set; }
+
+    public virtual ICollection<Player> Players { get; set; } = new List<Player>();
 }

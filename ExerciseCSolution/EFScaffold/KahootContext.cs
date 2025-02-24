@@ -78,12 +78,26 @@ public partial class KahootContext : DbContext
             entity.ToTable("player", "kahoot");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Gameid).HasColumnName("gameid");
             entity.Property(e => e.Nickname).HasColumnName("nickname");
 
-            entity.HasOne(d => d.Game).WithMany(p => p.Players)
-                .HasForeignKey(d => d.Gameid)
-                .HasConstraintName("player_gameid_fkey");
+            entity.HasMany(d => d.Games).WithMany(p => p.Players)
+                .UsingEntity<Dictionary<string, object>>(
+                    "Playergame",
+                    r => r.HasOne<Game>().WithMany()
+                        .HasForeignKey("Gameid")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("playergame_gameid_fkey"),
+                    l => l.HasOne<Player>().WithMany()
+                        .HasForeignKey("Playerid")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("playergame_playerid_fkey"),
+                    j =>
+                    {
+                        j.HasKey("Playerid", "Gameid").HasName("playergame_pkey");
+                        j.ToTable("playergame", "kahoot");
+                        j.IndexerProperty<string>("Playerid").HasColumnName("playerid");
+                        j.IndexerProperty<string>("Gameid").HasColumnName("gameid");
+                    });
         });
 
         modelBuilder.Entity<Playeranswer>(entity =>
@@ -98,7 +112,12 @@ public partial class KahootContext : DbContext
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("answertimestamp");
+            entity.Property(e => e.Gameid).HasColumnName("gameid");
             entity.Property(e => e.Optionid).HasColumnName("optionid");
+
+            entity.HasOne(d => d.Game).WithMany(p => p.Playeranswers)
+                .HasForeignKey(d => d.Gameid)
+                .HasConstraintName("playeranswer_gameid_fkey");
 
             entity.HasOne(d => d.Option).WithMany(p => p.Playeranswers)
                 .HasForeignKey(d => d.Optionid)

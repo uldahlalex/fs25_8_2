@@ -15,8 +15,13 @@ create table kahoot.game
 create table kahoot.player
 (
     nickname text not null,
-    id text primary key,
-    gameid text references kahoot.game(id)
+    id text primary key
+);
+
+create table kahoot.playergame (
+    playerid text references kahoot.player(id),
+    gameid text references kahoot.game(id),
+    primary key (playerid, gameid)
 );
 
 create table kahoot.question
@@ -36,6 +41,7 @@ create table kahoot.questionoption(
 create table kahoot.playeranswer(
                                     playerid text references kahoot.player(id),
                                     questionid text references kahoot.question(id),
+                                    gameid text references kahoot.game(id),
                                     optionid text references kahoot.questionoption(id),
                                     answertimestamp timestamp default current_timestamp,
                                     primary key (playerid, questionid)

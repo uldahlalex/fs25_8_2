@@ -15,17 +15,20 @@ public class ServerSendsQuestionDto : BaseDto
     public Question Question { get; set; }
 }
 
-public class GameState
+public class PlayerWithAnswersForGame
 {
-    
+    public Player Player { get; set; }
+    public List<Playeranswer> Answers { get; set; }
+    public string GameId { get; set; }
 }
 
 public class ServerEndsGameRoundDto : BaseDto
 {
-    public GameState GameState { get; set; }
+    public List<PlayerWithAnswersForGame> GameState { get; set; }
 }
 
-public class ClientWantsToGoToQuestionPhase(IConnectionManager connectionManager, KahootContext ctx) : BaseEventHandler<ClientWantsToGoToQuestionPhaseDto>
+public class ClientWantsToGoToQuestionPhase(IConnectionManager connectionManager, KahootContext ctx)
+    : BaseEventHandler<ClientWantsToGoToQuestionPhaseDto>
 {
     public async override Task Handle(ClientWantsToGoToQuestionPhaseDto dto, IWebSocketConnection socket)
     {
@@ -41,12 +44,23 @@ public class ClientWantsToGoToQuestionPhase(IConnectionManager connectionManager
         };
         //broadcast to players in game
         await connectionManager.BroadcastToTopic("games/" + dto.GameId, result);
-        
+
         //Broadcast game end after 30 seconds
         await Task.Delay(30000);
-        var gameEnd = new ServerEndsGameRoundDto()
+        ServerEndsGameRoundDto serverEndsGameRound = new ServerEndsGameRoundDto()
         {
-            GameState = new GameState()
+            GameState = ctx.Players
+                .Where(p => p.Games.Any(g => g.Id == dto.GameId))
+                .Select(p =>
+                    new PlayerWithAnswersForGame()
+                    {
+                        Player = p,
+                        Answers = p.Playeranswers.Where(pa => pa.Gameid == dto.GameId).ToList(),
+                        GameId = dto.GameId
+                    }
+                ).ToList()
         };
+        await connectionManager.BroadcastToTopic("games/" + dto.GameId, serverEndsGameRound);
+
     }
 }

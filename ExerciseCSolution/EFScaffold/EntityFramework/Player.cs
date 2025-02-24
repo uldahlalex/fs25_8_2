@@ -9,9 +9,7 @@ public partial class Player
 
     public string Id { get; set; } = null!;
 
-    public string? Gameid { get; set; }
-
-    public virtual Game? Game { get; set; }
-
     public virtual ICollection<Playeranswer> Playeranswers { get; set; } = new List<Playeranswer>();
+
+    public virtual ICollection<Game> Games { get; set; } = new List<Game>();
 }

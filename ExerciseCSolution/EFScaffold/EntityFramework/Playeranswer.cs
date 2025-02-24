@@ -9,9 +9,13 @@ public partial class Playeranswer
 
     public string Questionid { get; set; } = null!;
 
+    public string? Gameid { get; set; }
+
     public string? Optionid { get; set; }
 
     public DateTime? Answertimestamp { get; set; }
+
+    public virtual Game? Game { get; set; }
 
     public virtual Questionoption? Option { get; set; }
 
