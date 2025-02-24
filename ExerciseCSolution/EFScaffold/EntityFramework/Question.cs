@@ -7,11 +7,13 @@ public partial class Question
 {
     public string Id { get; set; } = null!;
 
-    public string? Gameid { get; set; }
+    public string? Gametemplateid { get; set; }
 
     public string Questiontext { get; set; } = null!;
 
-    public virtual Game? Game { get; set; }
+    public virtual ICollection<Gameround> Gamerounds { get; set; } = new List<Gameround>();
+
+    public virtual Gametemplate? Gametemplate { get; set; }
 
     public virtual ICollection<Playeranswer> Playeranswers { get; set; } = new List<Playeranswer>();
 

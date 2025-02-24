@@ -14,6 +14,10 @@ public partial class KahootContext : DbContext
 
     public virtual DbSet<Game> Games { get; set; }
 
+    public virtual DbSet<Gameround> Gamerounds { get; set; }
+
+    public virtual DbSet<Gametemplate> Gametemplates { get; set; }
+
     public virtual DbSet<Player> Players { get; set; }
 
     public virtual DbSet<Playeranswer> Playeranswers { get; set; }
@@ -31,6 +35,40 @@ public partial class KahootContext : DbContext
             entity.ToTable("game", "kahoot");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Template).HasColumnName("template");
+
+            entity.HasOne(d => d.TemplateNavigation).WithMany(p => p.Games)
+                .HasForeignKey(d => d.Template)
+                .HasConstraintName("game_template_fkey");
+        });
+
+        modelBuilder.Entity<Gameround>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("gameround_pkey");
+
+            entity.ToTable("gameround", "kahoot");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Gameid).HasColumnName("gameid");
+            entity.Property(e => e.Roundquestionid).HasColumnName("roundquestionid");
+
+            entity.HasOne(d => d.Game).WithMany(p => p.Gamerounds)
+                .HasForeignKey(d => d.Gameid)
+                .HasConstraintName("gameround_gameid_fkey");
+
+            entity.HasOne(d => d.Roundquestion).WithMany(p => p.Gamerounds)
+                .HasForeignKey(d => d.Roundquestionid)
+                .HasConstraintName("gameround_roundquestionid_fkey");
+        });
+
+        modelBuilder.Entity<Gametemplate>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("gametemplate_pkey");
+
+            entity.ToTable("gametemplate", "kahoot");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name).HasColumnName("name");
         });
 
         modelBuilder.Entity<Player>(entity =>
@@ -84,12 +122,12 @@ public partial class KahootContext : DbContext
             entity.ToTable("question", "kahoot");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Gameid).HasColumnName("gameid");
+            entity.Property(e => e.Gametemplateid).HasColumnName("gametemplateid");
             entity.Property(e => e.Questiontext).HasColumnName("questiontext");
 
-            entity.HasOne(d => d.Game).WithMany(p => p.Questions)
-                .HasForeignKey(d => d.Gameid)
-                .HasConstraintName("question_gameid_fkey");
+            entity.HasOne(d => d.Gametemplate).WithMany(p => p.Questions)
+                .HasForeignKey(d => d.Gametemplateid)
+                .HasConstraintName("question_gametemplateid_fkey");
         });
 
         modelBuilder.Entity<Questionoption>(entity =>

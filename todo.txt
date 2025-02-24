@@ -1,6 +1,9 @@
-kahoot solution:
-1. Byg modeller server side og generate
-
+Diagram: https://drive.google.com/file/d/1Y39Hbn3aKaJ3jaLjCazJ48RSmsiGYo6m/view?usp=sharing
+kræver: Der er en spørgsmål + option template ledig
+topics: 
+    - lobby/GUID
+    - games/GUID
+    - 
 
 - Reconnect cases for redis state restore
-- Client ID to user ID mapping if auth
+- Client ID to user ID mapping if auth (eller bare brug client ID til at persisten til DB for at komme uden om auth)
