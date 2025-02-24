@@ -9,11 +9,6 @@ public class ClientWantsToJoinGameDto : BaseDto
     public string GameId { get; set; }
 }
 
-public class ServerHasAddedPlayerToGame : BaseDto
-{
-    public string GameId { get; set; }
-    public string PlayerId { get; set; }
-}
 
 public class ClientWantsToJoinGame(IConnectionManager connectionManager, KahootContext ctx) : BaseEventHandler<ClientWantsToJoinGameDto>
 {
@@ -25,9 +20,9 @@ public class ClientWantsToJoinGame(IConnectionManager connectionManager, KahootC
         var player = ctx.Players.First(p => p.Id == clientId);
         player.Games.Add(game);
         ctx.SaveChanges();
-        socket.SendDto(new ServerHasAddedPlayerToGame()
+        socket.SendDto(new ServerAddsClientToGame()
         {
-            PlayerId = player.Id,
+            
             GameId = game.Id,
         });
     }

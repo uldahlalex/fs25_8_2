@@ -21,7 +21,7 @@ create table kahoot.player
 create table kahoot.playergame (
     playerid text references kahoot.player(id),
     gameid text references kahoot.game(id),
-    primary key (playerid, gameid)
+    primary key(playerid, gameid) 
 );
 
 create table kahoot.question

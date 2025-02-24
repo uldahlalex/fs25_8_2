@@ -10,32 +10,107 @@
 
 import axios, { AxiosError } from 'axios';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelToken } from 'axios';
-import {BaseDto} from 'ws-request-hook';
+
+
+export interface BaseDto {
+    eventType?: string;
+    requestId?: string;
+}
+
+export interface ClientWantsToGoToQuestionPhaseDto extends BaseDto {
+    gameId?: string;
+}
+
+export interface ServerSendsQuestionDto extends BaseDto {
+    question?: Question;
+}
+
+export interface Question {
+    id?: string;
+    gametemplateid?: string | undefined;
+    questiontext?: string;
+    gamerounds?: Gameround[];
+    gametemplate?: Gametemplate | undefined;
+    playeranswers?: Playeranswer[];
+    questionoptions?: Questionoption[];
+}
+
+export interface Gameround {
+    gameid?: string | undefined;
+    roundquestionid?: string | undefined;
+    id?: string;
+    game?: Game | undefined;
+    roundquestion?: Question | undefined;
+}
+
+export interface Game {
+    id?: string;
+    template?: string | undefined;
+    gamerounds?: Gameround[];
+    playeranswers?: Playeranswer[];
+    templateNavigation?: Gametemplate | undefined;
+    players?: Player[];
+}
+
+export interface Playeranswer {
+    playerid?: string;
+    questionid?: string;
+    gameid?: string | undefined;
+    optionid?: string | undefined;
+    answertimestamp?: Date | undefined;
+    game?: Game | undefined;
+    option?: Questionoption | undefined;
+    player?: Player;
+    question?: Question;
+}
+
+export interface Questionoption {
+    id?: string;
+    questionid?: string | undefined;
+    optiontext?: string;
+    iscorrect?: boolean;
+    playeranswers?: Playeranswer[];
+    question?: Question | undefined;
+}
+
+export interface Player {
+    nickname?: string;
+    id?: string;
+    playeranswers?: Playeranswer[];
+    games?: Game[];
+}
+
+export interface Gametemplate {
+    id?: string;
+    name?: string;
+    games?: Game[];
+    questions?: Question[];
+}
+
+export interface ServerEndsGameRoundDto extends BaseDto {
+    gameState?: PlayerWithAnswersForGame[];
+}
+
+export interface PlayerWithAnswersForGame {
+    player?: Player;
+    answers?: Playeranswer[];
+    gameId?: string;
+}
+
+export interface ClientWantsToJoinGameDto extends BaseDto {
+    gameId?: string;
+}
+
+export interface ClientWantsToStartAGameDto extends BaseDto {
+}
+
+export interface ServerAddsClientToGame extends BaseDto {
+    gameId?: string;
+}
 
 export interface ClientAnswersQuestionDto extends BaseDto {
-    answer?: string;
-    roomId?: string;
-}
-
-export interface GameState extends BaseDto {
-    players?: Player[];
-    currentQuestion?: Question;
-    scores?: { [key: string]: number; };
-    phase?: string;
-    timeLeft?: number;
-    correctAnswer?: string;
-}
-
-export interface Player extends BaseDto {
-    id?: string;
-    nickName?: string;
-    score?: number;
-}
-
-export interface Question extends BaseDto {
-    id?: string;
-    questionText?: string;
-    options?: string[];
+    optionId?: string;
+    questionId?: string;
 }
 
 export interface ClientWantsToAuthenticateDto extends BaseDto {
@@ -64,10 +139,13 @@ export interface ServerSendsErrorMessageDto extends BaseDto {
 
 /** Available eventType constants */
 export enum StringConstants {
+    ClientWantsToGoToQuestionPhaseDto = "ClientWantsToGoToQuestionPhaseDto",
+    ServerSendsQuestionDto = "ServerSendsQuestionDto",
+    ServerEndsGameRoundDto = "ServerEndsGameRoundDto",
+    ClientWantsToJoinGameDto = "ClientWantsToJoinGameDto",
+    ClientWantsToStartAGameDto = "ClientWantsToStartAGameDto",
+    ServerAddsClientToGame = "ServerAddsClientToGame",
     ClientAnswersQuestionDto = "ClientAnswersQuestionDto",
-    GameState = "GameState",
-    Player = "Player",
-    Question = "Question",
     ClientWantsToAuthenticateDto = "ClientWantsToAuthenticateDto",
     ClientWantsToSubscribeToTopicDto = "ClientWantsToSubscribeToTopicDto",
     ClientWantsToUnsubscribeFromTopicDto = "ClientWantsToUnsubscribeFromTopicDto",

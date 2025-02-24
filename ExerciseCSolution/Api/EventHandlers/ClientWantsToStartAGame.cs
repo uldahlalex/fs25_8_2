@@ -7,6 +7,7 @@ namespace Api.EventHandlers;
 
 public class ClientWantsToStartAGameDto : BaseDto
 {
+    
 }
 
 public class ClientWantsToStartAGame(KahootContext ctx, IConnectionManager connectionManager)

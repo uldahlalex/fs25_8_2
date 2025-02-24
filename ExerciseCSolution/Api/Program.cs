@@ -93,16 +93,19 @@ public class Program
                     },
                     new Question()
                     {
+                        Id = Guid.NewGuid().ToString(),
                         Questiontext = "What is the meaning of life?",
                         Questionoptions = new List<Questionoption>()
                         {
                             new Questionoption()
                             {
+                                Id = Guid.NewGuid().ToString(),
                                 Iscorrect = true,
                                 Optiontext = "42"
                             },
                             new Questionoption()
                             {
+                                Id = Guid.NewGuid().ToString(),
                                 Iscorrect = false,
                                 Optiontext = "family"
                             }
