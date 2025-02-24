@@ -35,11 +35,11 @@ public partial class KahootContext : DbContext
             entity.ToTable("game", "kahoot");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Template).HasColumnName("template");
+            entity.Property(e => e.Templateid).HasColumnName("templateid");
 
-            entity.HasOne(d => d.TemplateNavigation).WithMany(p => p.Games)
-                .HasForeignKey(d => d.Template)
-                .HasConstraintName("game_template_fkey");
+            entity.HasOne(d => d.Template).WithMany(p => p.Games)
+                .HasForeignKey(d => d.Templateid)
+                .HasConstraintName("game_templateid_fkey");
         });
 
         modelBuilder.Entity<Gameround>(entity =>

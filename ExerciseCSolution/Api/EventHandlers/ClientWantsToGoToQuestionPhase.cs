@@ -1,6 +1,9 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using EFScaffold;
 using EFScaffold.EntityFramework;
 using Fleck;
+using Microsoft.EntityFrameworkCore;
 using WebSocketBoilerplate;
 
 namespace Api.EventHandlers;
@@ -32,15 +35,19 @@ public class ClientWantsToGoToQuestionPhase(IConnectionManager connectionManager
 {
     public async override Task Handle(ClientWantsToGoToQuestionPhaseDto dto, IWebSocketConnection socket)
     {
-        var game = ctx.Games.First(g => g.Id == dto.GameId);
-        var questionsForGame = game.TemplateNavigation.Questions;
+        var game = ctx.Games 
+            .Include(g => g.Gamerounds)
+            .Include(g => g.Template)
+            .ThenInclude(t => t.Questions)
+           .First(g => g.Id == dto.GameId);
+        var questionsForGame = game.Template.Questions;
         var answeredQuestions = game.Gamerounds.Select(g => g.Roundquestionid);
         //where answeredQuestions does not contain question
-        var unanseredQuestions = game.TemplateNavigation.Questions.Where(q => !answeredQuestions.Contains(q.Id));
+        var unanseredQuestions = game.Template.Questions.Where(q => !answeredQuestions.Contains(q.Id));
         var question = unanseredQuestions.First();
         var result = new ServerSendsQuestionDto()
         {
-            Question = question,
+            Question = JsonSerializer.Deserialize<Question>(JsonSerializer.Serialize(question, new JsonSerializerOptions() {ReferenceHandler = ReferenceHandler.IgnoreCycles})),
         };
         //broadcast to players in game
         await connectionManager.BroadcastToTopic("games/" + dto.GameId, result);

@@ -9,7 +9,7 @@ create table kahoot.gametemplate (
 create table kahoot.game
 (
     id text primary key,
-    template text references kahoot.gametemplate(id) 
+    templateid text references kahoot.gametemplate(id) 
 );
 
 create table kahoot.player

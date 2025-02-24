@@ -45,10 +45,10 @@ export interface Gameround {
 
 export interface Game {
     id?: string;
-    template?: string | undefined;
+    templateid?: string | undefined;
     gamerounds?: Gameround[];
     playeranswers?: Playeranswer[];
-    templateNavigation?: Gametemplate | undefined;
+    template?: Gametemplate | undefined;
     players?: Player[];
 }
 

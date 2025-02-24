@@ -20,8 +20,8 @@ public class ClientWantsToStartAGame(KahootContext ctx, IConnectionManager conne
         var gameId = Guid.NewGuid().ToString();
         var game = new Game()
         {
-            Template = ctx.Gametemplates.First().Id,
-            Id = Guid.NewGuid().ToString()
+            Templateid = ctx.Gametemplates.First().Id,
+            Id = gameId
         };
         ctx.Games.Add(game);
         ctx.SaveChanges();
@@ -33,7 +33,7 @@ public class ClientWantsToStartAGame(KahootContext ctx, IConnectionManager conne
         var result = new ServerAddsClientToGame()
         {
             GameId = gameId,
-            requestId = dto.requestId
+            requestId = dto.requestId,
         };
         socket.SendDto(result);
     }
