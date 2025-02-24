@@ -4,6 +4,6 @@ namespace Api.EventHandlers;
 
 public class ClientAnswersQuestionDto : BaseDto
 {
-    public string Answer { get; set; }
-    public string RoomId { get; set; }
+    public string optionId { get; set; }
+    public string questionId { get; set; }
 }

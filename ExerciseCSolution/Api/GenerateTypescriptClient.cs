@@ -6,10 +6,10 @@ namespace Startup.Extensions;
 
 public static class GenerateTypescriptClient
 {
-    public static async Task GenerateTypeScriptClient(this WebApplication app, string docName)
+    public static async Task GenerateTypeScriptClient(this WebApplication app, string path)
     {
         var document = await app.Services.GetRequiredService<IOpenApiDocumentGenerator>()
-            .GenerateAsync(docName);
+            .GenerateAsync("v1");
 
         var settings = new TypeScriptClientGeneratorSettings
         {
@@ -28,7 +28,7 @@ public static class GenerateTypescriptClient
         var code = generator.GenerateFile();
 
 
-        var outputPath = Path.Combine(Directory.GetCurrentDirectory() + "/../../client/src/generated-client.ts");
+        var outputPath = Path.Combine(Directory.GetCurrentDirectory() + path);
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
         await File.WriteAllTextAsync(outputPath, code);

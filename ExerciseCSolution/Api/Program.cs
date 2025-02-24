@@ -1,5 +1,7 @@
 using System.Reflection;
 using Api.Websocket.Documentation;
+using EFScaffold;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 using StackExchange.Redis;
@@ -20,6 +22,12 @@ public class Program
             .GetRequiredService<IOptionsMonitor<AppOptions>>()
             .CurrentValue;
 
+        builder.Services.AddDbContext<KahootContext>(options =>
+        {
+            options.UseNpgsql(appOptions.DbConnectionString);
+            options.EnableSensitiveDataLogging();
+        });
+
         var redisConfig = new ConfigurationOptions
         {
             AbortOnConnectFail = false,
@@ -38,6 +46,7 @@ public class Program
         builder.Services.AddSingleton<IConnectionManager, RedisConnectionManager>();
         builder.Services.AddSingleton<CustomWebSocketServer>();
         builder.Services.InjectEventHandlers(Assembly.GetExecutingAssembly());
+        builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddOpenApiDocument(conf =>
         {
             conf.DocumentProcessors.Add(new AddAllDerivedTypesProcessor());
@@ -47,7 +56,7 @@ public class Program
         app.Services.GetRequiredService<CustomWebSocketServer>().Start(app);
         app.UseOpenApi();
         app.MapScalarApiReference();
-        app.GenerateTypeScriptClient("v1").GetAwaiter().GetResult();
+        app.GenerateTypeScriptClient("/../client/src/generated-client.ts").GetAwaiter().GetResult();
         app.Run();
     }
 }
