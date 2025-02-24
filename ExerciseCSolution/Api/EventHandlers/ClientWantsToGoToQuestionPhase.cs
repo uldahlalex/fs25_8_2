@@ -39,6 +39,7 @@ public class ClientWantsToGoToQuestionPhase(IConnectionManager connectionManager
             .Include(g => g.Gamerounds)
             .Include(g => g.Template)
             .ThenInclude(t => t.Questions)
+            .ThenInclude(q => q.Questionoptions)
            .First(g => g.Id == dto.GameId);
         var questionsForGame = game.Template.Questions;
         var answeredQuestions = game.Gamerounds.Select(g => g.Roundquestionid);

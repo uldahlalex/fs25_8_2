@@ -102,6 +102,7 @@ export interface ClientWantsToJoinGameDto extends BaseDto {
 }
 
 export interface ClientWantsToStartAGameDto extends BaseDto {
+    templateId?: string;
 }
 
 export interface ServerAddsClientToGame extends BaseDto {
@@ -111,6 +112,7 @@ export interface ServerAddsClientToGame extends BaseDto {
 export interface ClientAnswersQuestionDto extends BaseDto {
     optionId?: string;
     questionId?: string;
+    gameId?: string;
 }
 
 export interface ClientWantsToAuthenticateDto extends BaseDto {

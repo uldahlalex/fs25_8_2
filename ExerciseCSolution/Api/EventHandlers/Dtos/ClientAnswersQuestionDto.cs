@@ -6,4 +6,5 @@ public class ClientAnswersQuestionDto : BaseDto
 {
     public string optionId { get; set; }
     public string questionId { get; set; }
+    public string gameId { get; set; }
 }

@@ -1,3 +1,4 @@
+using Api.EventHandlers.Dtos;
 using EFScaffold;
 using EFScaffold.EntityFramework;
 using Fleck;
@@ -17,9 +18,15 @@ public class ClientAnswersQuestionEventHandler(IConnectionManager connectionMana
             Questionid = dto.questionId,
             Answertimestamp = DateTime.Now,
             Playerid = clientId,
-            Optionid = answer.Id
+            Optionid = answer.Id,
+            Gameid = dto.gameId,
         });
         context.SaveChanges();
+        var confirm = new ServerConfirmsDto()
+        {
+            Success = true
+        };
+        socket.SendDto(confirm);
 
     }
 }
