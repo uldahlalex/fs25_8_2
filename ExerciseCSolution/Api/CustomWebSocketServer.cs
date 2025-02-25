@@ -11,7 +11,7 @@ public class CustomWebSocketServer(IConnectionManager manager, ILogger<CustomWeb
 {
     public void Start(WebApplication app)
     {
-        var port = GetAvailablePort(8181);
+        var port = GetAvailablePort(8080);
         Environment.SetEnvironmentVariable("PORT", port.ToString());
         var url = $"ws://0.0.0.0:{port}";
         var server = new WebSocketServer(url);

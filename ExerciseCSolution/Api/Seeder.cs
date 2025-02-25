@@ -5,11 +5,12 @@ namespace Api;
 
 public class Seeder(KahootContext context)
 {
-    public async Task SeedDefaultGame()
+    public async Task<string> SeedDefaultGameReturnId()
     {
+        var gameId = Guid.NewGuid().ToString();
         var game = new Game
         {
-            Id = Guid.NewGuid().ToString(),
+            Id = gameId,
             Name = "Test Quiz",
             Questions = new List<Question>
             {
@@ -70,6 +71,7 @@ public class Seeder(KahootContext context)
 
         context.Games.Add(game);
         await context.SaveChangesAsync();
-        
+        return gameId;
+
     }
 }

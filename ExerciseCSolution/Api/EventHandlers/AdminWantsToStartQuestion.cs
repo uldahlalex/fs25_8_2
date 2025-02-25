@@ -53,6 +53,7 @@ public class AdminWantsToStartQuestion(
             .ThenInclude(pa => pa.SelectedOption).First(g => g.Id == dto.GameId);
         var possibleNextQuestions = game.Questions
             .Where(q => q.Answered == false).ToList();
+
         if (!possibleNextQuestions.Any())
         {
             var serverEndsGame = new ServerEndsGameDto()
@@ -81,6 +82,9 @@ public class AdminWantsToStartQuestion(
             Success = true,
             requestId = dto.requestId
         });
+        var question = ctx.Questions.First(q => q.Id == nextQuestion.QuestionId);
+        question.Answered = true;
+        ctx.SaveChanges();
         await Task.Delay(gameTimeProvider.MilliSeconds);
         await connectionManager.BroadcastToTopic("games/" + dto.GameId, new ServerEndsGameRoundDto()
         {

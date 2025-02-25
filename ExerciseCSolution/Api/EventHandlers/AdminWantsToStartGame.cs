@@ -22,8 +22,8 @@ public class AdminWantsToStartGame(
         if (dto.Password != "ilovewebsockets")
             throw new Exception("Invalid pass");
 
-        await seeder.SeedDefaultGame();
-        var game = ctx.Games.First();
+        var gameId = await seeder.SeedDefaultGameReturnId();
+        var game = ctx.Games.First(id => id.Id == gameId);
 
         var clients = await connectionManager.GetMembersFromTopicId("lobby");
 
