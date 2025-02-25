@@ -31,9 +31,6 @@ public partial class KahootContext : DbContext
             entity.ToTable("game", "kahoot");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.CurrentQuestionIndex)
-                .HasDefaultValue(0)
-                .HasColumnName("current_question_index");
             entity.Property(e => e.Name).HasColumnName("name");
         });
 
@@ -86,11 +83,11 @@ public partial class KahootContext : DbContext
 
             entity.ToTable("question", "kahoot");
 
-            entity.HasIndex(e => new { e.GameId, e.QuestionIndex }, "unique_question_order").IsUnique();
-
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Answered)
+                .HasDefaultValue(false)
+                .HasColumnName("answered");
             entity.Property(e => e.GameId).HasColumnName("game_id");
-            entity.Property(e => e.QuestionIndex).HasColumnName("question_index");
             entity.Property(e => e.QuestionText).HasColumnName("question_text");
 
             entity.HasOne(d => d.Game).WithMany(p => p.Questions)

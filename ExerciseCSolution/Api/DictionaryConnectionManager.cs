@@ -137,10 +137,12 @@ public class DictionaryConnectionManager(ILogger<DictionaryConnectionManager> lo
 
         SocketToConnectionId.TryRemove(socketId, out _);
 
-        // Clean up topics
         if (MemberTopics.TryGetValue(clientId, out var topics))
             foreach (var topic in topics)
+            {
                 await RemoveFromTopic(topic, clientId);
+                await BroadcastToTopic(topic, new MemberHasLeftDto { MemberId = clientId });
+            }
 
         MemberTopics.TryRemove(clientId, out _);
     }
@@ -190,4 +192,9 @@ public class DictionaryConnectionManager(ILogger<DictionaryConnectionManager> lo
             WriteIndented = true
         }));
     }
+}
+
+public class MemberHasLeftDto : BaseDto
+{
+    public string MemberId { get; set; }
 }

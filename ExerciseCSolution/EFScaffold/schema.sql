@@ -4,8 +4,7 @@ create schema if not exists kahoot;
 -- A game represents a quiz/competition
 create table kahoot.game (
                              id text primary key,
-                             name text not null,
-                             current_question_index integer default 0
+                             name text not null
 );
 
 -- Questions belonging to a game
@@ -13,8 +12,7 @@ create table kahoot.question (
                                  id text primary key,
                                  game_id text references kahoot.game(id),
                                  question_text text not null,
-                                 question_index integer not null,
-                                 constraint unique_question_order unique(game_id, question_index)
+                                 answered boolean not null default false
 );
 
 -- Options for each question

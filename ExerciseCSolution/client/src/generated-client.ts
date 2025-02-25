@@ -10,22 +10,72 @@
 
 import axios, { AxiosError } from 'axios';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelToken } from 'axios';
-import {BaseDto} from "ws-request-hook";
+import {BaseDto} from 'ws-request-hook';
 
+export interface MemberHasLeftDto extends BaseDto {
+    memberId?: string;
+}
 
-export interface ClientWantsToGoToQuestionPhaseDto extends BaseDto {
+export interface AdminWantsToStartGameDto extends BaseDto {
+    password?: string;
+}
+
+export interface ServerAddsClientToGameDto extends BaseDto {
+    gameId?: string;
+}
+
+export interface AdminHasStartedGameDto extends BaseDto {
+    gameId?: string;
+}
+
+export interface AdminWantsToStartQuestionDto extends BaseDto {
+    password?: string;
     gameId?: string;
 }
 
 export interface ServerSendsQuestionDto extends BaseDto {
-    question?: Question;
+    question?: QuestionDTO;
+}
+
+export interface QuestionDTO {
+    questionId?: string;
+    questionText?: string;
+    isAnswered?: boolean;
+    options?: QuestionOptionDTO[];
+    playerAnswers?: PlayerAnswerDTO[];
+}
+
+export interface QuestionOptionDTO {
+    optionId?: string;
+    optionText?: string;
+    isCorrect?: boolean;
+}
+
+export interface PlayerAnswerDTO {
+    playerId?: string;
+    playerNickname?: string;
+    selectedOptionId?: string | undefined;
+    isCorrect?: boolean;
+    answerTimestamp?: Date | undefined;
+}
+
+export interface ServerEndsGameRoundDto extends BaseDto {
+    gameStateDto?: GameStateDTO;
+}
+
+export interface GameStateDTO {
+    gameId?: string;
+    gameName?: string;
+    currentQuestion?: Question | undefined;
+    players?: PlayerDTO[];
+    questions?: QuestionDTO[];
 }
 
 export interface Question {
     id?: string;
     gameId?: string | undefined;
     questionText?: string;
-    questionIndex?: number;
+    answered?: boolean;
     game?: Game | undefined;
     playerAnswers?: PlayerAnswer[];
     questionOptions?: QuestionOption[];
@@ -34,7 +84,6 @@ export interface Question {
 export interface Game {
     id?: string;
     name?: string;
-    currentQuestionIndex?: number | undefined;
     players?: Player[];
     questions?: Question[];
 }
@@ -66,54 +115,20 @@ export interface QuestionOption {
     question?: Question | undefined;
 }
 
-export interface ServerEndsGameRoundDto extends BaseDto {
-    gameStateDto?: GameStateDTO;
-}
-
-export interface GameStateDTO {
-    gameId?: string;
-    gameName?: string;
-    currentQuestionIndex?: number;
-    players?: PlayerDTO[];
-    questions?: QuestionDTO[];
-}
-
 export interface PlayerDTO {
     playerId?: string;
     nickname?: string;
 }
 
-export interface QuestionDTO {
-    questionId?: string;
-    questionText?: string;
-    questionIndex?: number;
-    options?: QuestionOptionDTO[];
-    playerAnswers?: PlayerAnswerDTO[];
+export interface ServerEndsGameDto extends BaseDto {
+    gameStateDto?: GameStateDTO;
 }
 
-export interface QuestionOptionDTO {
-    optionId?: string;
-    optionText?: string;
-    isCorrect?: boolean;
+export interface ClientEntersLobbyDto extends BaseDto {
 }
 
-export interface PlayerAnswerDTO {
-    playerId?: string;
-    playerNickname?: string;
-    selectedOptionId?: string;
-    isCorrect?: boolean;
-    answerTimestamp?: Date | undefined;
-}
-
-export interface ClientWantsToJoinGameDto extends BaseDto {
-    gameId?: string;
-}
-
-export interface ClientWantsToStartAGameDto extends BaseDto {
-}
-
-export interface ServerAddsClientToGameDto extends BaseDto {
-    gameId?: string;
+export interface ServerHasClientInLobbyDto extends BaseDto {
+    allClientIds?: string[];
 }
 
 export interface ClientAnswersQuestionDto extends BaseDto {
@@ -148,12 +163,16 @@ export interface ServerSendsErrorMessageDto extends BaseDto {
 
 /** Available eventType constants */
 export enum StringConstants {
-    ClientWantsToGoToQuestionPhaseDto = "ClientWantsToGoToQuestionPhaseDto",
+    MemberHasLeftDto = "MemberHasLeftDto",
+    AdminWantsToStartGameDto = "AdminWantsToStartGameDto",
+    ServerAddsClientToGameDto = "ServerAddsClientToGameDto",
+    AdminHasStartedGameDto = "AdminHasStartedGameDto",
+    AdminWantsToStartQuestionDto = "AdminWantsToStartQuestionDto",
     ServerSendsQuestionDto = "ServerSendsQuestionDto",
     ServerEndsGameRoundDto = "ServerEndsGameRoundDto",
-    ClientWantsToJoinGameDto = "ClientWantsToJoinGameDto",
-    ClientWantsToStartAGameDto = "ClientWantsToStartAGameDto",
-    ServerAddsClientToGameDto = "ServerAddsClientToGameDto",
+    ServerEndsGameDto = "ServerEndsGameDto",
+    ClientEntersLobbyDto = "ClientEntersLobbyDto",
+    ServerHasClientInLobbyDto = "ServerHasClientInLobbyDto",
     ClientAnswersQuestionDto = "ClientAnswersQuestionDto",
     ClientWantsToAuthenticateDto = "ClientWantsToAuthenticateDto",
     ClientWantsToSubscribeToTopicDto = "ClientWantsToSubscribeToTopicDto",

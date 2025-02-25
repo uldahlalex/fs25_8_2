@@ -1,52 +1,82 @@
 import {useEffect, useState} from "react";
-import {BaseDto, useWsClient} from "ws-request-hook";
+import {useWsClient} from "ws-request-hook";
 import {
-    ClientWantsToStartAGameDto,
-    ServerAddsClientToGameDto,
+    ClientAnswersQuestionDto,
+    GameStateDTO,
+    QuestionDTO,
+    ServerEndsGameDto,
+    ServerEndsGameRoundDto,
     ServerSendsQuestionDto,
     StringConstants
 } from "./generated-client.ts";
-import ActiveGame from "./ActiveGame.tsx";
+import toast from "react-hot-toast";
 
 export default function Game() {
 
-    const {onMessage, sendRequest, send} = useWsClient();
+    const {onMessage, sendRequest, send, readyState} = useWsClient();
     const [gameId, setGameId] = useState<string | undefined>(undefined);
+    const [currentQuestion, setCurrentQuestion] = useState<QuestionDTO | undefined>(undefined)
+    const [gameState, setGameState] = useState<GameStateDTO | undefined>(undefined)
 
 
     useEffect(() => {
+        if (readyState != 1)
+            return;
         const unsubscribe = onMessage<ServerSendsQuestionDto>(StringConstants.ServerSendsQuestionDto, (dto) => {
-            console.log(dto);
+            setCurrentQuestion(dto.question)
+            toast('NEW QUESTION!!!')
         });
-        unsubscribe();
-    }, []);
+        const unsub = onMessage<ServerEndsGameDto>(StringConstants.ServerEndsGameDto, (dto) => {
+            toast("game has ended")
+            setCurrentQuestion(undefined)
+            setGameState(dto.gameStateDto)
+        })
+
+        const unsu = onMessage<ServerEndsGameRoundDto>(StringConstants.ServerEndsGameRoundDto, (dto) => {
+            toast("game round has ended")
+            setCurrentQuestion(undefined)
+            setGameState(dto.gameStateDto)
+        })
+    }, [readyState]);
 
     return (
         <>
-        <div className="w-full h-full flex items-center justify-center flex-col">
+        <div className="w-full h-52 flex items-center justify-center flex-col">
+
+            {
+                currentQuestion ?
+
+                    <>
+
+                        <div>{currentQuestion.questionText}</div>
+                        {currentQuestion.options?.map(opt =>
+                        <div key={opt.optionId}>
+                            <button className="btn btn-secondary" onClick={() => {
+                                const dto: ClientAnswersQuestionDto = {
+                                    gameId: gameId,
+                                    optionId: opt.optionId,
+                                    eventType: StringConstants.ClientAnswersQuestionDto,
+                                    questionId: currentQuestion.questionId,
+
+                                };
+                                send<ClientAnswersQuestionDto>(dto);
+
+                            }}>{opt.optionText}</button>
+
+                        </div>
+                        ) }
+                    </>
+                  : gameState ? <div>{JSON.stringify(gameState)}</div>
+        :
+        <div>Waiting for question...</div>
 
 
-            <button onClick={async () => {
-                var dto: ClientWantsToStartAGameDto = {
-                    eventType: StringConstants.ClientWantsToStartAGameDto
-                }
-                var result = await sendRequest<ClientWantsToStartAGameDto & BaseDto, ServerAddsClientToGameDto>(dto, StringConstants.ServerAddsClientToGameDto);
-                setGameId(result.gameId!)
-            }} className="btn btn-primary">Start game
-            </button>
+        }
 
+        </div>
 
-            <div>
-                {
-
-                    gameId ?
-                        <ActiveGame gameid={gameId}/>
-                        : null
-                }
-            </div>
-        </div>         
-     
 </>
 
-    );
+)
+    ;
 }

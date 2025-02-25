@@ -117,6 +117,8 @@ public class RedisConnectionManager : IConnectionManager
         tx.SetRemoveAsync($"{TOPIC_MEMBERS}{topic}", memberId);
         tx.SetRemoveAsync($"{MEMBER_TOPICS}{memberId}", topic);
         await tx.ExecuteAsync();
+        await BroadcastToTopic(topic, new MemberHasLeftDto { MemberId = memberId });
+
     }
 
     public async Task<List<string>> GetMembersFromTopicId(string topic)

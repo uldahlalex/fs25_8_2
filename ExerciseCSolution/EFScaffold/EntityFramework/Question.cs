@@ -11,7 +11,7 @@ public partial class Question
 
     public string QuestionText { get; set; } = null!;
 
-    public int QuestionIndex { get; set; }
+    public bool Answered { get; set; }
 
     public virtual Game? Game { get; set; }
 

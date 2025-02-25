@@ -28,6 +28,7 @@ public class Program
             options.UseNpgsql(appOptions.DbConnectionString);
             options.EnableSensitiveDataLogging();
         });
+        builder.Services.AddScoped<Seeder>();
 
         var redisConfig = new ConfigurationOptions
         {
@@ -44,7 +45,7 @@ public class Program
         };
         builder.Services.AddSingleton<IGameTimeProvider, GameTimeProvider>();
         builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConfig));
-        builder.Services.AddSingleton<IConnectionManager, RedisConnectionManager>();
+        builder.Services.AddSingleton<IConnectionManager, DictionaryConnectionManager>();
         builder.Services.AddSingleton<CustomWebSocketServer>();
         builder.Services.InjectEventHandlers(Assembly.GetExecutingAssembly());
         builder.Services.AddEndpointsApiExplorer();
@@ -56,13 +57,8 @@ public class Program
         var app = builder.Build();
         app.UseOpenApi();
         app.MapScalarApiReference();
-        // app.GenerateTypeScriptClient("/../client/src/generated-client.ts").GetAwaiter().GetResult();
-        using (var scope = app.Services.CreateScope())
-        {
-            var ctx = scope.ServiceProvider.GetRequiredService<KahootContext>();
-            new Seeder(ctx).SeedTestData().GetAwaiter().GetResult();
+         // app.GenerateTypeScriptClient("/../client/src/generated-client.ts").GetAwaiter().GetResult();
 
-        }
         app.Services.GetRequiredService<CustomWebSocketServer>().Start(app);
 
         app.Run();
