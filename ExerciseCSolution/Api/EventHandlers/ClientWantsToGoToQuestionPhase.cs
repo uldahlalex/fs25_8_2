@@ -18,17 +18,9 @@ public class ServerSendsQuestionDto : BaseDto
     public Question Question { get; set; }
 }
 
-public class PlayerWithAnswersForGame
-{
-    public Player Player { get; set; }
-    public List<Playeranswer> Answers { get; set; }
-    public string GameId { get; set; }
-}
-
 public class ServerEndsGameRoundDto : BaseDto
 {
-    public List<PlayerWithAnswersForGame> GameState { get; set; }
-    public bool LastRound { get; set; }
+    public GameQuestionAnswersDTO GameQuestionAnswersDTO { get; set; }
 }
 
 public class ClientWantsToGoToQuestionPhase(
@@ -59,24 +51,14 @@ public class ClientWantsToGoToQuestionPhase(
                     await connectionManager.BroadcastToTopic("games/" + dto.GameId, nextQuestionDto);  
                                                                                                             
                     await Task.Delay(gameTimeProvider.MilliSeconds);
-        } 
-        
+        }
+
+        var result = await GetGameQuestionAnswers(dto.GameId);
         
         ServerEndsGameRoundDto serverEndsGameRound = new ServerEndsGameRoundDto()
         {
-            LastRound = nextQuestion is null,
-            GameState = ctx.Players
-                .Include(p => p.Games)
-                .Include(p => p.Playeranswers)
-                .Where(p => p.Games.Any(g => g.Id == dto.GameId))
-                .Select(p =>
-                    new PlayerWithAnswersForGame()
-                    {
-                        Player = p,
-                        Answers = p.Playeranswers.Where(pa => pa.Gameid == dto.GameId).ToList(),
-                        GameId = dto.GameId
-                    }
-                ).ToList()
+            GameQuestionAnswersDTO = result
+            
         };
         var serialized = JsonSerializer.Serialize(serverEndsGameRound, new JsonSerializerOptions()
         {
@@ -87,4 +69,72 @@ public class ClientWantsToGoToQuestionPhase(
             JsonSerializer.Deserialize<ServerEndsGameRoundDto>(serialized));
 
     }
+    
+    private async Task<GameQuestionAnswersDTO> GetGameQuestionAnswers(string gameId)
+    {
+        var result = await ctx.Games
+            .Include(g => g.Playeranswers)
+            .Where(g => g.Id == gameId)
+            .Select(g => new GameQuestionAnswersDTO
+            {
+                GameId = g.Id,
+                Questions = g.Gamerounds
+                    .Select(gr => gr.Roundquestion)
+                    .Select(q => new QuestionAnswersDTO
+                    {
+                        QuestionId = q.Id,
+                        QuestionText = q.Questiontext,
+                        PlayerAnswers = q.Playeranswers
+                            .Where(pa => pa.Gameid == gameId)
+                            .Select(pa => new PlayerAnswerDTO
+                            {
+                                PlayerId = pa.Playerid,
+                                PlayerNickname = pa.Player.Nickname,
+                                SelectedOptionId = pa.Optionid,
+                                IsCorrect = pa.Option.Iscorrect,
+                                AnswerTimestamp = pa.Answertimestamp
+                            }).ToList(),
+                        Options = q.Questionoptions
+                            .Select(qo => new QuestionOptionDTO
+                            {
+                                OptionId = qo.Id,
+                                OptionText = qo.Optiontext,
+                                IsCorrect = qo.Iscorrect
+                            }).ToList()
+                    }).ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        return result;
+    }
+}
+
+public class GameQuestionAnswersDTO
+{
+    public string GameId { get; set; }
+    public List<QuestionAnswersDTO> Questions { get; set; }
+}
+
+public class QuestionAnswersDTO
+{
+    public string QuestionId { get; set; }
+    public string QuestionText { get; set; }
+    public List<PlayerAnswerDTO> PlayerAnswers { get; set; }
+    public List<QuestionOptionDTO> Options { get; set; }
+}
+
+public class PlayerAnswerDTO
+{
+    public string PlayerId { get; set; }
+    public string PlayerNickname { get; set; }
+    public string SelectedOptionId { get; set; }
+    public bool IsCorrect { get; set; }
+    public DateTime? AnswerTimestamp { get; set; }
+}
+
+public class QuestionOptionDTO
+{
+    public string OptionId { get; set; }
+    public string OptionText { get; set; }
+    public bool IsCorrect { get; set; }
 }

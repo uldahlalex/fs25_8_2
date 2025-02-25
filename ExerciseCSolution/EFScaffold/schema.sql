@@ -1,58 +1,43 @@
 drop schema if exists kahoot cascade;
 create schema if not exists kahoot;
 
-create table kahoot.gametemplate (
-  id text primary key,
-  name text not null  
+-- A game represents a quiz/competition
+create table kahoot.game (
+                             id text primary key,
+                             name text not null,
+                             current_question_index integer default 0
 );
 
-create table kahoot.game
-(
-    id text primary key,
-    templateid text references kahoot.gametemplate(id) 
+-- Questions belonging to a game
+create table kahoot.question (
+                                 id text primary key,
+                                 game_id text references kahoot.game(id),
+                                 question_text text not null,
+                                 question_index integer not null,
+                                 constraint unique_question_order unique(game_id, question_index)
 );
 
-create table kahoot.player
-(
-    nickname text not null,
-    id text primary key
+-- Options for each question
+create table kahoot.question_option (
+                                        id text primary key,
+                                        question_id text references kahoot.question(id),
+                                        option_text text not null,
+                                        is_correct boolean not null
 );
 
-create table kahoot.playergame (
-    playerid text references kahoot.player(id),
-    gameid text references kahoot.game(id),
-    primary key(playerid, gameid) 
+-- Players in a game
+create table kahoot.player (
+                               id text primary key,
+                               game_id text references kahoot.game(id),
+                               nickname text not null,
+                               constraint unique_nickname_per_game unique(game_id, nickname)
 );
 
-create table kahoot.question
-(
-    id text primary key,
-    gametemplateid text references kahoot.gametemplate(id),
-    questiontext text not null
+-- Player answers
+create table kahoot.player_answer (
+                                      player_id text references kahoot.player(id),
+                                      question_id text references kahoot.question(id),
+                                      selected_option_id text references kahoot.question_option(id),
+                                      answer_timestamp timestamp default current_timestamp,
+                                      primary key (player_id, question_id)
 );
-
-create table kahoot.questionoption(
-                                      id text primary key,
-                                      questionid text references kahoot.question(id),
-                                      optiontext text not null,
-                                      iscorrect boolean not null
-);
-
-create table kahoot.playeranswer(
-                                    playerid text references kahoot.player(id),
-                                    questionid text references kahoot.question(id),
-                                    gameid text references kahoot.game(id),
-                                    optionid text references kahoot.questionoption(id),
-                                    answertimestamp timestamp default current_timestamp,
-                                    primary key (playerid, questionid)
-);
-
-create table kahoot.gameround(
-    gameid text references kahoot.game(id),
-    roundquestionId text references kahoot.question(id),
-    id text primary key 
-);
-
-alter table kahoot.player owner to avnadmin;
-alter table kahoot.question owner to avnadmin;
-alter table kahoot.game owner to avnadmin;

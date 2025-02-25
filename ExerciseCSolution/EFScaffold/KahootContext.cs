@@ -14,17 +14,13 @@ public partial class KahootContext : DbContext
 
     public virtual DbSet<Game> Games { get; set; }
 
-    public virtual DbSet<Gameround> Gamerounds { get; set; }
-
-    public virtual DbSet<Gametemplate> Gametemplates { get; set; }
-
     public virtual DbSet<Player> Players { get; set; }
 
-    public virtual DbSet<Playeranswer> Playeranswers { get; set; }
+    public virtual DbSet<PlayerAnswer> PlayerAnswers { get; set; }
 
     public virtual DbSet<Question> Questions { get; set; }
 
-    public virtual DbSet<Questionoption> Questionoptions { get; set; }
+    public virtual DbSet<QuestionOption> QuestionOptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,39 +31,9 @@ public partial class KahootContext : DbContext
             entity.ToTable("game", "kahoot");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Templateid).HasColumnName("templateid");
-
-            entity.HasOne(d => d.Template).WithMany(p => p.Games)
-                .HasForeignKey(d => d.Templateid)
-                .HasConstraintName("game_templateid_fkey");
-        });
-
-        modelBuilder.Entity<Gameround>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("gameround_pkey");
-
-            entity.ToTable("gameround", "kahoot");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Gameid).HasColumnName("gameid");
-            entity.Property(e => e.Roundquestionid).HasColumnName("roundquestionid");
-
-            entity.HasOne(d => d.Game).WithMany(p => p.Gamerounds)
-                .HasForeignKey(d => d.Gameid)
-                .HasConstraintName("gameround_gameid_fkey");
-
-            entity.HasOne(d => d.Roundquestion).WithMany(p => p.Gamerounds)
-                .HasForeignKey(d => d.Roundquestionid)
-                .HasConstraintName("gameround_roundquestionid_fkey");
-        });
-
-        modelBuilder.Entity<Gametemplate>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("gametemplate_pkey");
-
-            entity.ToTable("gametemplate", "kahoot");
-
-            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CurrentQuestionIndex)
+                .HasDefaultValue(0)
+                .HasColumnName("current_question_index");
             entity.Property(e => e.Name).HasColumnName("name");
         });
 
@@ -77,61 +43,44 @@ public partial class KahootContext : DbContext
 
             entity.ToTable("player", "kahoot");
 
+            entity.HasIndex(e => new { e.GameId, e.Nickname }, "unique_nickname_per_game").IsUnique();
+
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.GameId).HasColumnName("game_id");
             entity.Property(e => e.Nickname).HasColumnName("nickname");
 
-            entity.HasMany(d => d.Games).WithMany(p => p.Players)
-                .UsingEntity<Dictionary<string, object>>(
-                    "Playergame",
-                    r => r.HasOne<Game>().WithMany()
-                        .HasForeignKey("Gameid")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("playergame_gameid_fkey"),
-                    l => l.HasOne<Player>().WithMany()
-                        .HasForeignKey("Playerid")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("playergame_playerid_fkey"),
-                    j =>
-                    {
-                        j.HasKey("Playerid", "Gameid").HasName("playergame_pkey");
-                        j.ToTable("playergame", "kahoot");
-                        j.IndexerProperty<string>("Playerid").HasColumnName("playerid");
-                        j.IndexerProperty<string>("Gameid").HasColumnName("gameid");
-                    });
+            entity.HasOne(d => d.Game).WithMany(p => p.Players)
+                .HasForeignKey(d => d.GameId)
+                .HasConstraintName("player_game_id_fkey");
         });
 
-        modelBuilder.Entity<Playeranswer>(entity =>
+        modelBuilder.Entity<PlayerAnswer>(entity =>
         {
-            entity.HasKey(e => new { e.Playerid, e.Questionid }).HasName("playeranswer_pkey");
+            entity.HasKey(e => new { e.PlayerId, e.QuestionId }).HasName("player_answer_pkey");
 
-            entity.ToTable("playeranswer", "kahoot");
+            entity.ToTable("player_answer", "kahoot");
 
-            entity.Property(e => e.Playerid).HasColumnName("playerid");
-            entity.Property(e => e.Questionid).HasColumnName("questionid");
-            entity.Property(e => e.Answertimestamp)
+            entity.Property(e => e.PlayerId).HasColumnName("player_id");
+            entity.Property(e => e.QuestionId).HasColumnName("question_id");
+            entity.Property(e => e.AnswerTimestamp)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp without time zone")
-                .HasColumnName("answertimestamp");
-            entity.Property(e => e.Gameid).HasColumnName("gameid");
-            entity.Property(e => e.Optionid).HasColumnName("optionid");
+                .HasColumnName("answer_timestamp");
+            entity.Property(e => e.SelectedOptionId).HasColumnName("selected_option_id");
 
-            entity.HasOne(d => d.Game).WithMany(p => p.Playeranswers)
-                .HasForeignKey(d => d.Gameid)
-                .HasConstraintName("playeranswer_gameid_fkey");
-
-            entity.HasOne(d => d.Option).WithMany(p => p.Playeranswers)
-                .HasForeignKey(d => d.Optionid)
-                .HasConstraintName("playeranswer_optionid_fkey");
-
-            entity.HasOne(d => d.Player).WithMany(p => p.Playeranswers)
-                .HasForeignKey(d => d.Playerid)
+            entity.HasOne(d => d.Player).WithMany(p => p.PlayerAnswers)
+                .HasForeignKey(d => d.PlayerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("playeranswer_playerid_fkey");
+                .HasConstraintName("player_answer_player_id_fkey");
 
-            entity.HasOne(d => d.Question).WithMany(p => p.Playeranswers)
-                .HasForeignKey(d => d.Questionid)
+            entity.HasOne(d => d.Question).WithMany(p => p.PlayerAnswers)
+                .HasForeignKey(d => d.QuestionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("playeranswer_questionid_fkey");
+                .HasConstraintName("player_answer_question_id_fkey");
+
+            entity.HasOne(d => d.SelectedOption).WithMany(p => p.PlayerAnswers)
+                .HasForeignKey(d => d.SelectedOptionId)
+                .HasConstraintName("player_answer_selected_option_id_fkey");
         });
 
         modelBuilder.Entity<Question>(entity =>
@@ -140,29 +89,32 @@ public partial class KahootContext : DbContext
 
             entity.ToTable("question", "kahoot");
 
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Gametemplateid).HasColumnName("gametemplateid");
-            entity.Property(e => e.Questiontext).HasColumnName("questiontext");
+            entity.HasIndex(e => new { e.GameId, e.QuestionIndex }, "unique_question_order").IsUnique();
 
-            entity.HasOne(d => d.Gametemplate).WithMany(p => p.Questions)
-                .HasForeignKey(d => d.Gametemplateid)
-                .HasConstraintName("question_gametemplateid_fkey");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.GameId).HasColumnName("game_id");
+            entity.Property(e => e.QuestionIndex).HasColumnName("question_index");
+            entity.Property(e => e.QuestionText).HasColumnName("question_text");
+
+            entity.HasOne(d => d.Game).WithMany(p => p.Questions)
+                .HasForeignKey(d => d.GameId)
+                .HasConstraintName("question_game_id_fkey");
         });
 
-        modelBuilder.Entity<Questionoption>(entity =>
+        modelBuilder.Entity<QuestionOption>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("questionoption_pkey");
+            entity.HasKey(e => e.Id).HasName("question_option_pkey");
 
-            entity.ToTable("questionoption", "kahoot");
+            entity.ToTable("question_option", "kahoot");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Iscorrect).HasColumnName("iscorrect");
-            entity.Property(e => e.Optiontext).HasColumnName("optiontext");
-            entity.Property(e => e.Questionid).HasColumnName("questionid");
+            entity.Property(e => e.IsCorrect).HasColumnName("is_correct");
+            entity.Property(e => e.OptionText).HasColumnName("option_text");
+            entity.Property(e => e.QuestionId).HasColumnName("question_id");
 
-            entity.HasOne(d => d.Question).WithMany(p => p.Questionoptions)
-                .HasForeignKey(d => d.Questionid)
-                .HasConstraintName("questionoption_questionid_fkey");
+            entity.HasOne(d => d.Question).WithMany(p => p.QuestionOptions)
+                .HasForeignKey(d => d.QuestionId)
+                .HasConstraintName("question_option_question_id_fkey");
         });
 
         OnModelCreatingPartial(modelBuilder);

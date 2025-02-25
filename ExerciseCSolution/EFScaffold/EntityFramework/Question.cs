@@ -7,15 +7,15 @@ public partial class Question
 {
     public string Id { get; set; } = null!;
 
-    public string? Gametemplateid { get; set; }
+    public string? GameId { get; set; }
 
-    public string Questiontext { get; set; } = null!;
+    public string QuestionText { get; set; } = null!;
 
-    public virtual ICollection<Gameround> Gamerounds { get; set; } = new List<Gameround>();
+    public int QuestionIndex { get; set; }
 
-    public virtual Gametemplate? Gametemplate { get; set; }
+    public virtual Game? Game { get; set; }
 
-    public virtual ICollection<Playeranswer> Playeranswers { get; set; } = new List<Playeranswer>();
+    public virtual ICollection<PlayerAnswer> PlayerAnswers { get; set; } = new List<PlayerAnswer>();
 
-    public virtual ICollection<Questionoption> Questionoptions { get; set; } = new List<Questionoption>();
+    public virtual ICollection<QuestionOption> QuestionOptions { get; set; } = new List<QuestionOption>();
 }

@@ -206,8 +206,11 @@ public class ConnectionWithWsClient(Type connectionManagerType) : WebApplication
             ReferenceHandler = ReferenceHandler.IgnoreCycles,
             WriteIndented = true
         }));
-        if (serverEndsGameRoundDto.GameState.Count == 0)
-            throw new Exception("the game state should not be of count 0. "+nameof(ServerEndsGameRoundDto)+" contains state: "+JsonSerializer.Serialize(serverEndsGameRoundDto));
+        if (serverEndsGameRoundDto.GameQuestionAnswersDTO
+                .Questions
+                .Select(q => q.PlayerAnswers)
+                .Count() != 1)
+            throw new Exception("There should be exactly 1 answer. State:"+nameof(ServerEndsGameRoundDto)+" contains state: "+JsonSerializer.Serialize(serverEndsGameRoundDto));
 
     }
 }
