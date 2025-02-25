@@ -1,6 +1,10 @@
 Diagram: https://drive.google.com/file/d/1Y39Hbn3aKaJ3jaLjCazJ48RSmsiGYo6m/view?usp=sharing
 
-- receivedmessags enten som json serializeret eller "object" der kan typecastes
-
+Forberedelse i dag:
+- Lav demo færdig
+- Lave slides og præsenter relevant teori for dagens delmål
 - Reconnect cases for redis state restore
-- Client ID to user ID mapping if auth (eller bare brug client ID til at persisten til DB for at komme uden om auth)
+
+
+Forberedelse til fredag:
+- Testing teori
