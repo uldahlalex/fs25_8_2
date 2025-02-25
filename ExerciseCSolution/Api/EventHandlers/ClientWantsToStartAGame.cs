@@ -16,27 +16,21 @@ public class ClientWantsToStartAGame(ILogger<ClientWantsToStartAGame> logger, Ka
     public override async Task Handle(ClientWantsToStartAGameDto dto, IWebSocketConnection socket)
     {
         var clientId = await connectionManager.GetClientIdFromSocketId(socket.ConnectionInfo.Id.ToString());
+        var game = ctx.Games.First();
         var player = new Player()
         {
             Id = clientId,
             Nickname = "Bob",
-            
+            GameId = game.Id
         };
         ctx.Players.Add(player);
-
-        var gameId = Guid.NewGuid().ToString();
-        var game = new Game()
-        { 
-            Id = gameId,
-            Players = new List<Player>() {player}
-        };
-        ctx.Games.Add(game);
+        game.Players.Add(player);
         ctx.SaveChanges();
         
-        await connectionManager.AddToTopic("games/" + gameId, clientId);
+        await connectionManager.AddToTopic("games/" + game.Id, clientId);
         var result = new ServerAddsClientToGameDto()
         {
-            GameId = gameId,
+            GameId = game.Id,
             requestId = dto.requestId,
         };
         socket.SendDto(result);

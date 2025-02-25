@@ -188,10 +188,10 @@ public class ConnectionWithWsClient(Type connectionManagerType) : WebApplication
 
         var answer = new ClientAnswersQuestionDto()
         {
-            // requestId = Guid.NewGuid().ToString(),
-            // gameId = startGameResult.GameId,
-            // optionId = serverSendsQuestionDto.Question.Questionoptions.First().Id,
-            // questionId = serverSendsQuestionDto.Question.Id
+            requestId = Guid.NewGuid().ToString(),
+            gameId = startGameResult.GameId,
+            optionId = serverSendsQuestionDto.Question.QuestionOptions.First().Id,
+            questionId = serverSendsQuestionDto.Question.Id
         };
         var answerResult = await _wsClient.SendMessage<ClientAnswersQuestionDto, ServerConfirmsDto>(answer);
         if (answerResult.Success != true)
@@ -203,11 +203,12 @@ public class ConnectionWithWsClient(Type connectionManagerType) : WebApplication
             ReferenceHandler = ReferenceHandler.IgnoreCycles,
             WriteIndented = true
         }));
-        if (serverEndsGameRoundDto.GameStateDto
-                .Questions
-                .Select(q => q.PlayerAnswers)
-                .Count() != 1)
-            throw new Exception("There should be exactly 1 answer. State:"+nameof(ServerEndsGameRoundDto)+" contains state: "+JsonSerializer.Serialize(serverEndsGameRoundDto));
+        if (serverEndsGameRoundDto.GameStateDto.Questions.First().PlayerAnswers.Count != 2)
+            throw new Exception("There should be exactly 2 answers. State:"+nameof(ServerEndsGameRoundDto)+" contains state: " +
+                                ""+JsonSerializer.Serialize(serverEndsGameRoundDto, new JsonSerializerOptions()
+                                {
+                                    WriteIndented = true
+                                }));
 
     }
 }
