@@ -18,6 +18,12 @@ public class ClientWantsToStartAGame(ILogger<ClientWantsToStartAGame> logger, Ka
     {
         var clientId = await connectionManager.GetClientIdFromSocketId(socket.ConnectionInfo.Id.ToString());
 
+        ctx.Players.Add(new Player()
+        {
+            Id = clientId,
+            Nickname = "Bob"
+        });
+
         var gameId = Guid.NewGuid().ToString();
         var game = new Game()
         {

@@ -24,7 +24,8 @@ public class ClientAnswersQuestionEventHandler(IConnectionManager connectionMana
         context.SaveChanges();
         var confirm = new ServerConfirmsDto()
         {
-            Success = true
+            Success = true,
+            requestId = dto.requestId
         };
         socket.SendDto(confirm);
 

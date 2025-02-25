@@ -5,16 +5,8 @@ using WebSocketBoilerplate;
 
 namespace Api;
 
-public class DictionaryConnectionManager : IConnectionManager
+public class DictionaryConnectionManager(ILogger<DictionaryConnectionManager> logger) : IConnectionManager
 {
-    private readonly ILogger<DictionaryConnectionManager> _logger;
-
-
-    public DictionaryConnectionManager(ILogger<DictionaryConnectionManager> logger)
-    {
-        _logger = logger;
-    }
-
     public ConcurrentDictionary<string, HashSet<string>> TopicMembers { get; set; } = new();
     public ConcurrentDictionary<string, HashSet<string>> MemberTopics { get; set; } = new();
     public ConcurrentDictionary<string /* Client ID */, IWebSocketConnection> ConnectionIdToSocket { get; } = new();
@@ -114,21 +106,21 @@ public class DictionaryConnectionManager : IConnectionManager
 
     public async Task OnOpen(IWebSocketConnection socket, string clientId)
     {
-        _logger.LogInformation($"OnOpen called with clientId: {clientId} and socketId: {socket.ConnectionInfo.Id}");
+        logger.LogInformation($"OnOpen called with clientId: {clientId} and socketId: {socket.ConnectionInfo.Id}");
 
         // If there's an existing connection for this client, clean it up first
         if (ConnectionIdToSocket.TryRemove(clientId, out var oldSocket))
         {
             var oldSocketId = oldSocket.ConnectionInfo.Id.ToString();
             SocketToConnectionId.TryRemove(oldSocketId, out _);
-            _logger.LogInformation($"Removed old connection {oldSocketId} for client {clientId}");
+            logger.LogInformation($"Removed old connection {oldSocketId} for client {clientId}");
         }
 
         // Add new connection
         ConnectionIdToSocket[clientId] = socket;
         SocketToConnectionId[socket.ConnectionInfo.Id.ToString()] = clientId;
 
-        _logger.LogInformation($"Added new connection {socket.ConnectionInfo.Id} for client {clientId}");
+        logger.LogInformation($"Added new connection {socket.ConnectionInfo.Id} for client {clientId}");
         await LogCurrentState();
     }
 
@@ -141,7 +133,7 @@ public class DictionaryConnectionManager : IConnectionManager
             currentSocket.ConnectionInfo.Id.ToString() == socketId)
         {
             ConnectionIdToSocket.TryRemove(clientId, out _);
-            _logger.LogInformation($"Removed connection for client {clientId}");
+            logger.LogInformation($"Removed connection for client {clientId}");
         }
 
         SocketToConnectionId.TryRemove(socketId, out _);
@@ -158,7 +150,7 @@ public class DictionaryConnectionManager : IConnectionManager
     {
         if (!TopicMembers.TryGetValue(topic, out var members))
         {
-            _logger.LogWarning($"No topic found: {topic}");
+            logger.LogWarning($"No topic found: {topic}");
             return;
         }
 
@@ -169,14 +161,14 @@ public class DictionaryConnectionManager : IConnectionManager
     {
         if (!ConnectionIdToSocket.TryGetValue(memberId, out var socket))
         {
-            _logger.LogWarning($"No socket found for member: {memberId}");
+            logger.LogWarning($"No socket found for member: {memberId}");
             await RemoveFromTopic(topic, memberId);
             return;
         }
 
         if (!socket.IsAvailable)
         {
-            _logger.LogWarning($"Socket not available for {memberId}");
+            logger.LogWarning($"Socket not available for {memberId}");
             await RemoveFromTopic(topic, memberId);
             return;
         }
@@ -187,9 +179,9 @@ public class DictionaryConnectionManager : IConnectionManager
 
     public async Task LogCurrentState()
     {
-        _logger.LogInformation("Current state:");
-        _logger.LogInformation("ConnectionIdToSocket:");
-        _logger.LogInformation(JsonSerializer.Serialize(new
+        logger.LogInformation("Current state:");
+        logger.LogInformation("ConnectionIdToSocket:");
+        logger.LogInformation(JsonSerializer.Serialize(new
         {
             ConnectionIdToSocket = await GetAllConnectionIdsWithSocketId(),
             SocketToCnnectionId = await GetAllSocketIdsWithConnectionId(),

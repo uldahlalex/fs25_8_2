@@ -1,4 +1,5 @@
 using EFScaffold;
+using EFScaffold.EntityFramework;
 using Fleck;
 using WebSocketBoilerplate;
 
@@ -17,7 +18,12 @@ public class ClientWantsToJoinGame(IConnectionManager connectionManager, KahootC
         var clientId = await connectionManager.GetClientIdFromSocketId(socket.ConnectionInfo.Id.ToString());
         var game = ctx.Games.First(g => g.Id == dto.GameId);
         await connectionManager.AddToTopic("games/" + dto.GameId, clientId);
-        var player = ctx.Players.First(p => p.Id == clientId);
+        var player = new Player()
+        {
+            Id = clientId,
+            Nickname = "Bob"
+        };
+        ctx.Players.Add(player);
         player.Games.Add(game);
         ctx.SaveChanges();
         socket.SendDto(new ServerAddsClientToGameDto()
