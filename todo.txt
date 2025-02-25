@@ -1,6 +1,6 @@
 Diagram: https://drive.google.com/file/d/1Y39Hbn3aKaJ3jaLjCazJ48RSmsiGYo6m/view?usp=sharing
 
-- Hvordan kan jeg blot finde absolut alle tidligere beskeder?
+- receivedmessags enten som json serializeret eller "object" der kan typecastes
 
 - Reconnect cases for redis state restore
 - Client ID to user ID mapping if auth (eller bare brug client ID til at persisten til DB for at komme uden om auth)
