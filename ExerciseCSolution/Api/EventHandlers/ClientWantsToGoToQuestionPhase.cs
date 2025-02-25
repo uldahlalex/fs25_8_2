@@ -28,12 +28,17 @@ public class PlayerWithAnswersForGame
 public class ServerEndsGameRoundDto : BaseDto
 {
     public List<PlayerWithAnswersForGame> GameState { get; set; }
+    public bool LastRound { get; set; }
 }
 
-public class ClientWantsToGoToQuestionPhase(IConnectionManager connectionManager, KahootContext ctx)
+public class ClientWantsToGoToQuestionPhase(
+    IConnectionManager connectionManager,
+    ILogger<ClientWantsToGoToQuestionPhase> logger,
+    KahootContext ctx, 
+    IGameTimeProvider gameTimeProvider)
     : BaseEventHandler<ClientWantsToGoToQuestionPhaseDto>
 {
-    public async override Task Handle(ClientWantsToGoToQuestionPhaseDto dto, IWebSocketConnection socket)
+    public override async Task Handle(ClientWantsToGoToQuestionPhaseDto dto, IWebSocketConnection socket)
     {
         var game = ctx.Games 
             .Include(g => g.Gamerounds)
@@ -41,23 +46,28 @@ public class ClientWantsToGoToQuestionPhase(IConnectionManager connectionManager
             .ThenInclude(t => t.Questions)
             .ThenInclude(q => q.Questionoptions)
            .First(g => g.Id == dto.GameId);
-        var questionsForGame = game.Template.Questions;
+        
         var answeredQuestions = game.Gamerounds.Select(g => g.Roundquestionid);
-        //where answeredQuestions does not contain question
-        var unanseredQuestions = game.Template.Questions.Where(q => !answeredQuestions.Contains(q.Id));
-        var question = unanseredQuestions.First();
-        var result = new ServerSendsQuestionDto()
-        {
-            Question = JsonSerializer.Deserialize<Question>(JsonSerializer.Serialize(question, new JsonSerializerOptions() {ReferenceHandler = ReferenceHandler.IgnoreCycles})),
-        };
-        //broadcast to players in game
-        await connectionManager.BroadcastToTopic("games/" + dto.GameId, result);
+        var nextQuestion = game.Template.Questions.Where(q => !answeredQuestions.Contains(q.Id)).FirstOrDefault();
 
-        //Broadcast game end after 30 seconds
-        await Task.Delay(30000);
+        if (nextQuestion is not null)
+        {
+                 var nextQuestionDto = new ServerSendsQuestionDto()
+                    {
+                        Question = JsonSerializer.Deserialize<Question>(JsonSerializer.Serialize(nextQuestion, new JsonSerializerOptions() {ReferenceHandler = ReferenceHandler.IgnoreCycles})),
+                    };
+                    await connectionManager.BroadcastToTopic("games/" + dto.GameId, nextQuestionDto);  
+                                                                                                            
+                    await Task.Delay(gameTimeProvider.MilliSeconds);
+        } 
+        
+        
         ServerEndsGameRoundDto serverEndsGameRound = new ServerEndsGameRoundDto()
         {
+            LastRound = nextQuestion is null,
             GameState = ctx.Players
+                .Include(p => p.Games)
+                .Include(p => p.Playeranswers)
                 .Where(p => p.Games.Any(g => g.Id == dto.GameId))
                 .Select(p =>
                     new PlayerWithAnswersForGame()
@@ -68,7 +78,13 @@ public class ClientWantsToGoToQuestionPhase(IConnectionManager connectionManager
                     }
                 ).ToList()
         };
-        await connectionManager.BroadcastToTopic("games/" + dto.GameId, serverEndsGameRound);
+        var serialized = JsonSerializer.Serialize(serverEndsGameRound, new JsonSerializerOptions()
+        {
+            ReferenceHandler = ReferenceHandler.IgnoreCycles
+        });
+        logger.LogInformation("Server ends game round: "+serialized);
+        await connectionManager.BroadcastToTopic<ServerEndsGameRoundDto>("games/" + dto.GameId, 
+            JsonSerializer.Deserialize<ServerEndsGameRoundDto>(serialized));
 
     }
 }

@@ -42,7 +42,7 @@ public class Program
             User = appOptions.REDIS_USERNAME,
             Password = appOptions.REDIS_PASSWORD
         };
-
+        builder.Services.AddSingleton<IGameTimeProvider, GameTimeProvider>();
         builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConfig));
         builder.Services.AddSingleton<IConnectionManager, RedisConnectionManager>();
         builder.Services.AddSingleton<CustomWebSocketServer>();

@@ -106,9 +106,8 @@ public class DictionaryConnectionManager(ILogger<DictionaryConnectionManager> lo
 
     public async Task OnOpen(IWebSocketConnection socket, string clientId)
     {
-        logger.LogInformation($"OnOpen called with clientId: {clientId} and socketId: {socket.ConnectionInfo.Id}");
+        logger.LogDebug($"OnOpen called with clientId: {clientId} and socketId: {socket.ConnectionInfo.Id}");
 
-        // If there's an existing connection for this client, clean it up first
         if (ConnectionIdToSocket.TryRemove(clientId, out var oldSocket))
         {
             var oldSocketId = oldSocket.ConnectionInfo.Id.ToString();
@@ -179,9 +178,7 @@ public class DictionaryConnectionManager(ILogger<DictionaryConnectionManager> lo
 
     public async Task LogCurrentState()
     {
-        logger.LogInformation("Current state:");
-        logger.LogInformation("ConnectionIdToSocket:");
-        logger.LogInformation(JsonSerializer.Serialize(new
+        logger.LogDebug(JsonSerializer.Serialize(new
         {
             ConnectionIdToSocket = await GetAllConnectionIdsWithSocketId(),
             SocketToCnnectionId = await GetAllSocketIdsWithConnectionId(),

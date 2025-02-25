@@ -17,24 +17,23 @@ public class ClientWantsToStartAGame(ILogger<ClientWantsToStartAGame> logger, Ka
     public override async Task Handle(ClientWantsToStartAGameDto dto, IWebSocketConnection socket)
     {
         var clientId = await connectionManager.GetClientIdFromSocketId(socket.ConnectionInfo.Id.ToString());
-
-        ctx.Players.Add(new Player()
+        var player = new Player()
         {
             Id = clientId,
             Nickname = "Bob"
-        });
+        };
+        ctx.Players.Add(player);
 
         var gameId = Guid.NewGuid().ToString();
         var game = new Game()
         {
             Templateid = ctx.Gametemplates.First().Id,
-            Id = gameId
+            Id = gameId,
+            Players = new List<Player>() {player}
         };
         ctx.Games.Add(game);
         ctx.SaveChanges();
-
-        //Broadcast to players browsing lobby
-
+        
         //Add client to game
         await connectionManager.AddToTopic("games/" + gameId, clientId);
         var result = new ServerAddsClientToGameDto()
@@ -42,7 +41,6 @@ public class ClientWantsToStartAGame(ILogger<ClientWantsToStartAGame> logger, Ka
             GameId = gameId,
             requestId = dto.requestId,
         };
-        logger.LogInformation(JsonSerializer.Serialize(result));
         socket.SendDto(result);
     }
 }

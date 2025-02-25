@@ -229,7 +229,7 @@ public class RedisConnectionManager : IConnectionManager
 
     public async Task LogCurrentState()
     {
-        _logger.LogInformation(JsonSerializer.Serialize(new
+        _logger.LogDebug(JsonSerializer.Serialize(new
         {
             ConnectionIdToSocket = await GetAllConnectionIdsWithSocketId(),
             SocketToConnectionId = await GetAllSocketIdsWithConnectionId(),

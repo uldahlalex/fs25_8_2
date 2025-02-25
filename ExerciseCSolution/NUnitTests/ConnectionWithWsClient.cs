@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Api;
 using Api.EventHandlers;
 using Api.EventHandlers.Dtos;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Moq;
 using NUnit.Framework;
 using WebSocketBoilerplate;
 
@@ -32,26 +34,34 @@ public class ConnectionWithWsClient(Type connectionManagerType) : WebApplication
             services.Remove(services.SingleOrDefault(d => d.ServiceType == typeof(IConnectionManager)) ??
                             throw new Exception("Could not find instance of " + nameof(IConnectionManager)));
             services.AddSingleton(typeof(IConnectionManager), connectionManagerType);
+
+            services.Remove(services.SingleOrDefault(d => d.ServiceType == typeof(IGameTimeProvider)) ??
+                            throw new Exception("Could not find instance of " + nameof(IGameTimeProvider)));
+            var mockGameTimeProvider = new Mock<IGameTimeProvider>();
+            //set default milliseconds to 2000
+            mockGameTimeProvider.Setup(s => s.MilliSeconds).Returns(2000);
+
+            services.AddSingleton<IGameTimeProvider>(mockGameTimeProvider.Object);
         });
     }
 
     [SetUp]
     public async Task Setup()
     {
-        _httpClient = CreateClient(); 
-        
+        _httpClient = CreateClient();
+
         //Singletons
         _logger = Services.GetRequiredService<ILogger<ConnectionWithWsClient>>();
         _connectionManager = Services.GetRequiredService<IConnectionManager>();
-        
+
         //Scoped services
         using var scope = Services.CreateScope();
         {
             _scope = Services.CreateScope();
             _dbContext = _scope.ServiceProvider.GetRequiredService<KahootContext>();
         }
-  
-        
+
+
         var wsPort = Environment.GetEnvironmentVariable("PORT");
         if (string.IsNullOrEmpty(wsPort)) throw new Exception("Environment variable WS_PORT is not set");
         _wsClientId = "client" + Guid.NewGuid();
@@ -150,12 +160,12 @@ public class ConnectionWithWsClient(Type connectionManagerType) : WebApplication
 
         await _wsClient.SendMessage(startQuestionPhaseDto);
         await Task.Delay(1000);
-        
+
         if (!_wsClient.ReceivedMessages.Any(m => m.eventType == nameof(ServerSendsQuestionDto).Replace("Dto", "")))
             throw new Exception("Did not receive any dto of type " + nameof(ServerSendsQuestionDto) +
                                 ", all received messages: " + JsonSerializer.Serialize(_wsClient.ReceivedMessages));
     }
-    
+
     [Theory]
     public async Task Client_Can_Start_Game_And_Start_Question_And_Answer_Question()
     {
@@ -178,20 +188,28 @@ public class ConnectionWithWsClient(Type connectionManagerType) : WebApplication
         await Task.Delay(1000);
 
         var serverSendsQuestionDto = _wsClient.GetMessagesOfType<ServerSendsQuestionDto>().First();
-        _logger.LogInformation(JsonSerializer.Serialize(serverSendsQuestionDto));
 
-        var anser = new ClientAnswersQuestionDto()
+        var answer = new ClientAnswersQuestionDto()
         {
             requestId = Guid.NewGuid().ToString(),
             gameId = startGameResult.GameId,
             optionId = serverSendsQuestionDto.Question.Questionoptions.First().Id,
             questionId = serverSendsQuestionDto.Question.Id
         };
-        var answerResult = await _wsClient.SendMessage<ClientAnswersQuestionDto, ServerConfirmsDto>(anser);
+        var answerResult = await _wsClient.SendMessage<ClientAnswersQuestionDto, ServerConfirmsDto>(answer);
         if (answerResult.Success != true)
             throw new Exception("Success property indicates a failure to answer the question");
+        await Task.Delay(Services.GetRequiredService<IGameTimeProvider>().MilliSeconds*2);
+        var serverEndsGameRoundDto = _wsClient.GetMessagesOfType<ServerEndsGameRoundDto>().First();
+        _logger.LogInformation("Result: "+JsonSerializer.Serialize(serverEndsGameRoundDto, new JsonSerializerOptions()
+        {
+            ReferenceHandler = ReferenceHandler.IgnoreCycles,
+            WriteIndented = true
+        }));
+        if (serverEndsGameRoundDto.GameState.Count == 0)
+            throw new Exception("the game state should not be of count 0. "+nameof(ServerEndsGameRoundDto)+" contains state: "+JsonSerializer.Serialize(serverEndsGameRoundDto));
+
     }
-    
 }
 //
 // public class NUnitLoggerProvider : ILoggerProvider
