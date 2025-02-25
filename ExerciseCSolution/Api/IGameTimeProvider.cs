@@ -8,5 +8,5 @@ public interface IGameTimeProvider
 
 public class GameTimeProvider : IGameTimeProvider
 {
-    public int MilliSeconds { get; set; } = 30_000;
+    public int MilliSeconds { get; set; } = 10_000;
 }

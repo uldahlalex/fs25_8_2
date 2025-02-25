@@ -44,8 +44,7 @@ public class ClientWantsToGoToQuestionPhase(
             .OrderBy(q => q.QuestionIndex)
             .FirstOrDefault(q => q.QuestionIndex > (game.CurrentQuestionIndex ?? -1));
 
-        if (nextQuestion is not null)
-        {
+      
             // Update the current question index
             game.CurrentQuestionIndex = nextQuestion.QuestionIndex;
             await ctx.SaveChangesAsync();
@@ -65,20 +64,20 @@ public class ClientWantsToGoToQuestionPhase(
             };
             socket.SendDto(confirm);
             await Task.Delay(gameTimeProvider.MilliSeconds);
-        }
+        
 
-        var result = await GetGameState(dto.GameId);
-
-        var serverEndsGameRound = new ServerEndsGameRoundDto()
-        {
-            GameStateDto = result
-        };
-
-        var serialized = JsonSerializer.Serialize(serverEndsGameRound,
-            new JsonSerializerOptions() { ReferenceHandler = ReferenceHandler.IgnoreCycles });
-
-        await connectionManager.BroadcastToTopic("games/" + dto.GameId,
-            JsonSerializer.Deserialize<ServerEndsGameRoundDto>(serialized));
+        // var result = await GetGameState(dto.GameId);
+        //
+        // var serverEndsGameRound = new ServerEndsGameRoundDto()
+        // {
+        //     GameStateDto = result
+        // };
+        //
+        // var serialized = JsonSerializer.Serialize(serverEndsGameRound,
+        //     new JsonSerializerOptions() { ReferenceHandler = ReferenceHandler.IgnoreCycles });
+        //
+        // await connectionManager.BroadcastToTopic("games/" + dto.GameId,
+        //     JsonSerializer.Deserialize<ServerEndsGameRoundDto>(serialized));
   
     }
 

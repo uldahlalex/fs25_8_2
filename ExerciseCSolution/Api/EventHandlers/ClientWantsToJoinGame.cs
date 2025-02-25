@@ -17,12 +17,23 @@ public class ClientWantsToJoinGame(IConnectionManager connectionManager, KahootC
     {
         var clientId = await connectionManager.GetClientIdFromSocketId(socket.ConnectionInfo.Id.ToString());
         var game = ctx.Games.First(g => g.Id == dto.GameId);
-        await connectionManager.AddToTopic("games/" + dto.GameId, clientId);
-        var player = new Player()
+        
+        var player = ctx.Players.FirstOrDefault(p => p.Id == clientId);
+
+        if (player is null)
         {
-            Id = clientId,
-            Nickname = "Bob"
-        };
+            var p = new Player()
+            {
+                Id = clientId,
+                Nickname = "Bob "+Guid.NewGuid(),
+                GameId = game.Id
+            };
+            player = p;
+            ctx.Players.Add(player);
+        }
+
+        await connectionManager.AddToTopic("games/" + dto.GameId, clientId);
+
         ctx.Players.Add(player);
         game.Players.Add(player);
         

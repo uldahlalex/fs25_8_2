@@ -147,6 +147,7 @@ public class DictionaryConnectionManager(ILogger<DictionaryConnectionManager> lo
 
     public async Task BroadcastToTopic<T>(string topic, T message) where T : BaseDto
     {
+        await LogCurrentState();
         if (!TopicMembers.TryGetValue(topic, out var members))
         {
             logger.LogWarning($"No topic found: {topic}");

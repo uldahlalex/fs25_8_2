@@ -189,6 +189,7 @@ public class RedisConnectionManager : IConnectionManager
 
     public async Task BroadcastToTopic<T>(string topic, T message) where T : BaseDto
     {
+        await LogCurrentState();
         var members = await GetMembersFromTopicId(topic);
         if (members.Count == 0)
         {
@@ -203,7 +204,7 @@ public class RedisConnectionManager : IConnectionManager
     {
         if (!ConnectionIdToSocket.TryGetValue(memberId, out var socket))
         {
-            _logger.LogWarning($"No socket found for member: {memberId}");
+            _logger.LogWarning($"No socket found for member: {memberId}. Removing from topic {topic}");
             await RemoveFromTopic(topic, memberId);
             return;
         }

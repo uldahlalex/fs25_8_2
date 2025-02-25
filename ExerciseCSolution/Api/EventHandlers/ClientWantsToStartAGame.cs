@@ -17,13 +17,20 @@ public class ClientWantsToStartAGame(ILogger<ClientWantsToStartAGame> logger, Ka
     {
         var clientId = await connectionManager.GetClientIdFromSocketId(socket.ConnectionInfo.Id.ToString());
         var game = ctx.Games.First();
-        var player = new Player()
+        var player = ctx.Players.FirstOrDefault(p => p.Id == clientId);
+
+        if (player is null)
         {
-            Id = clientId,
-            Nickname = "Bob"+Guid.NewGuid(),
-            GameId = game.Id
-        };
-        ctx.Players.Add(player);
+           var p = new Player()
+            {
+                Id = clientId,
+                Nickname = "Bob "+Guid.NewGuid(),
+                GameId = game.Id
+            };
+            player = p;
+            ctx.Players.Add(player);
+        }
+        
         game.Players.Add(player);
         ctx.SaveChanges();
         
