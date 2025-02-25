@@ -60,6 +60,8 @@ public class Program
          // app.GenerateTypeScriptClient("/../client/src/generated-client.ts").GetAwaiter().GetResult();
 
         app.Services.GetRequiredService<CustomWebSocketServer>().Start(app);
+        app.Urls.Clear();
+        app.Urls.Add($"http://*:5000");
 
         app.Run();
     }
