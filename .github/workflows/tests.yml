@@ -2,7 +2,6 @@ name: API tests with .NET + TestContainers
 
 on:
   workflow_dispatch:
-  push:
 
 env:
   APPOPTIONS__ASPNETCORE_ENVIRONMENT: Development
