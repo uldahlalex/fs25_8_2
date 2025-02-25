@@ -20,7 +20,7 @@ public class ClientWantsToStartAGame(ILogger<ClientWantsToStartAGame> logger, Ka
         var player = new Player()
         {
             Id = clientId,
-            Nickname = "Bob",
+            Nickname = "Bob"+Guid.NewGuid(),
             GameId = game.Id
         };
         ctx.Players.Add(player);

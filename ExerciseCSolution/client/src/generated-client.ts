@@ -10,12 +10,8 @@
 
 import axios, { AxiosError } from 'axios';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelToken } from 'axios';
+import {BaseDto} from "ws-request-hook";
 
-
-export interface BaseDto {
-    eventType?: string;
-    requestId?: string;
-}
 
 export interface ClientWantsToGoToQuestionPhaseDto extends BaseDto {
     gameId?: string;

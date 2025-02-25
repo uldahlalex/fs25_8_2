@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Api.EventHandlers.Dtos;
 using EFScaffold;
 using EFScaffold.EntityFramework;
 using Fleck;
@@ -42,7 +43,7 @@ public class ClientWantsToGoToQuestionPhase(
         var nextQuestion = game.Questions
             .OrderBy(q => q.QuestionIndex)
             .FirstOrDefault(q => q.QuestionIndex > (game.CurrentQuestionIndex ?? -1));
-    
+
         if (nextQuestion is not null)
         {
             // Update the current question index
@@ -53,31 +54,34 @@ public class ClientWantsToGoToQuestionPhase(
             var nextQuestionDto = new ServerSendsQuestionDto()
             {
                 Question = JsonSerializer.Deserialize<Question>(
-                    JsonSerializer.Serialize(nextQuestion, 
+                    JsonSerializer.Serialize(nextQuestion,
                         new JsonSerializerOptions() { ReferenceHandler = ReferenceHandler.IgnoreCycles }))
             };
             await connectionManager.BroadcastToTopic("games/" + dto.GameId, nextQuestionDto);
-
-            // Wait for the specified time
+            var confirm = new ServerConfirmsDto()
+            {
+                Success = true,
+                requestId = dto.requestId
+            };
+            socket.SendDto(confirm);
             await Task.Delay(gameTimeProvider.MilliSeconds);
         }
 
-        // Get and broadcast the updated game state
         var result = await GetGameState(dto.GameId);
-    
+
         var serverEndsGameRound = new ServerEndsGameRoundDto()
         {
             GameStateDto = result
         };
 
-        // Log and broadcast the game state
-        var serialized = JsonSerializer.Serialize(serverEndsGameRound, 
+        var serialized = JsonSerializer.Serialize(serverEndsGameRound,
             new JsonSerializerOptions() { ReferenceHandler = ReferenceHandler.IgnoreCycles });
-        logger.LogInformation("Server ends game round: " + serialized);
-    
-        await connectionManager.BroadcastToTopic("games/" + dto.GameId, 
+
+        await connectionManager.BroadcastToTopic("games/" + dto.GameId,
             JsonSerializer.Deserialize<ServerEndsGameRoundDto>(serialized));
+  
     }
+
     private async Task<GameStateDTO> GetGameState(string gameId)
     {
         var result = await ctx.Games

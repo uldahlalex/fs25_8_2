@@ -56,7 +56,7 @@ public class Program
         var app = builder.Build();
         app.UseOpenApi();
         app.MapScalarApiReference();
-        app.GenerateTypeScriptClient("/../client/src/generated-client.ts").GetAwaiter().GetResult();
+        // app.GenerateTypeScriptClient("/../client/src/generated-client.ts").GetAwaiter().GetResult();
         using (var scope = app.Services.CreateScope())
         {
             var ctx = scope.ServiceProvider.GetRequiredService<KahootContext>();
