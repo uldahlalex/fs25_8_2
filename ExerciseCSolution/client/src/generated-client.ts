@@ -27,74 +27,86 @@ export interface ServerSendsQuestionDto extends BaseDto {
 
 export interface Question {
     id?: string;
-    gametemplateid?: string | undefined;
-    questiontext?: string;
-    gamerounds?: Gameround[];
-    gametemplate?: Gametemplate | undefined;
-    playeranswers?: Playeranswer[];
-    questionoptions?: Questionoption[];
-}
-
-export interface Gameround {
-    gameid?: string | undefined;
-    roundquestionid?: string | undefined;
-    id?: string;
+    gameId?: string | undefined;
+    questionText?: string;
+    questionIndex?: number;
     game?: Game | undefined;
-    roundquestion?: Question | undefined;
+    playerAnswers?: PlayerAnswer[];
+    questionOptions?: QuestionOption[];
 }
 
 export interface Game {
     id?: string;
-    templateid?: string | undefined;
-    gamerounds?: Gameround[];
-    playeranswers?: Playeranswer[];
-    template?: Gametemplate | undefined;
-    players?: Player[];
-}
-
-export interface Playeranswer {
-    playerid?: string;
-    questionid?: string;
-    gameid?: string | undefined;
-    optionid?: string | undefined;
-    answertimestamp?: Date | undefined;
-    game?: Game | undefined;
-    option?: Questionoption | undefined;
-    player?: Player;
-    question?: Question;
-}
-
-export interface Questionoption {
-    id?: string;
-    questionid?: string | undefined;
-    optiontext?: string;
-    iscorrect?: boolean;
-    playeranswers?: Playeranswer[];
-    question?: Question | undefined;
-}
-
-export interface Player {
-    nickname?: string;
-    id?: string;
-    playeranswers?: Playeranswer[];
-    games?: Game[];
-}
-
-export interface Gametemplate {
-    id?: string;
     name?: string;
-    games?: Game[];
+    currentQuestionIndex?: number | undefined;
+    players?: Player[];
     questions?: Question[];
 }
 
-export interface ServerEndsGameRoundDto extends BaseDto {
-    gameState?: PlayerWithAnswersForGame[];
+export interface Player {
+    id?: string;
+    gameId?: string | undefined;
+    nickname?: string;
+    game?: Game | undefined;
+    playerAnswers?: PlayerAnswer[];
 }
 
-export interface PlayerWithAnswersForGame {
+export interface PlayerAnswer {
+    playerId?: string;
+    questionId?: string;
+    selectedOptionId?: string | undefined;
+    answerTimestamp?: Date | undefined;
     player?: Player;
-    answers?: Playeranswer[];
+    question?: Question;
+    selectedOption?: QuestionOption | undefined;
+}
+
+export interface QuestionOption {
+    id?: string;
+    questionId?: string | undefined;
+    optionText?: string;
+    isCorrect?: boolean;
+    playerAnswers?: PlayerAnswer[];
+    question?: Question | undefined;
+}
+
+export interface ServerEndsGameRoundDto extends BaseDto {
+    gameStateDto?: GameStateDTO;
+}
+
+export interface GameStateDTO {
     gameId?: string;
+    gameName?: string;
+    currentQuestionIndex?: number;
+    players?: PlayerDTO[];
+    questions?: QuestionDTO[];
+}
+
+export interface PlayerDTO {
+    playerId?: string;
+    nickname?: string;
+}
+
+export interface QuestionDTO {
+    questionId?: string;
+    questionText?: string;
+    questionIndex?: number;
+    options?: QuestionOptionDTO[];
+    playerAnswers?: PlayerAnswerDTO[];
+}
+
+export interface QuestionOptionDTO {
+    optionId?: string;
+    optionText?: string;
+    isCorrect?: boolean;
+}
+
+export interface PlayerAnswerDTO {
+    playerId?: string;
+    playerNickname?: string;
+    selectedOptionId?: string;
+    isCorrect?: boolean;
+    answerTimestamp?: Date | undefined;
 }
 
 export interface ClientWantsToJoinGameDto extends BaseDto {
@@ -102,10 +114,9 @@ export interface ClientWantsToJoinGameDto extends BaseDto {
 }
 
 export interface ClientWantsToStartAGameDto extends BaseDto {
-    templateId?: string;
 }
 
-export interface ServerAddsClientToGame extends BaseDto {
+export interface ServerAddsClientToGameDto extends BaseDto {
     gameId?: string;
 }
 
@@ -146,7 +157,7 @@ export enum StringConstants {
     ServerEndsGameRoundDto = "ServerEndsGameRoundDto",
     ClientWantsToJoinGameDto = "ClientWantsToJoinGameDto",
     ClientWantsToStartAGameDto = "ClientWantsToStartAGameDto",
-    ServerAddsClientToGame = "ServerAddsClientToGame",
+    ServerAddsClientToGameDto = "ServerAddsClientToGameDto",
     ClientAnswersQuestionDto = "ClientAnswersQuestionDto",
     ClientWantsToAuthenticateDto = "ClientWantsToAuthenticateDto",
     ClientWantsToSubscribeToTopicDto = "ClientWantsToSubscribeToTopicDto",

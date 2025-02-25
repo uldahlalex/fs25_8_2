@@ -126,7 +126,6 @@ public class ConnectionWithWsClient(Type connectionManagerType) : WebApplication
         var startGameDto = new ClientWantsToStartAGameDto()
         {
             requestId = Guid.NewGuid().ToString(),
-            TemplateId = _dbContext.Gametemplates.First().Id,
         };
         var result =
             await _wsClient.SendMessage<ClientWantsToStartAGameDto, ServerAddsClientToGameDto>(startGameDto, 20);
@@ -146,7 +145,6 @@ public class ConnectionWithWsClient(Type connectionManagerType) : WebApplication
         var startGameDto = new ClientWantsToStartAGameDto()
         {
             requestId = Guid.NewGuid().ToString(),
-            TemplateId = _dbContext.Gametemplates.First().Id,
         };
         var startGameResult =
             await _wsClient.SendMessage<ClientWantsToStartAGameDto, ServerAddsClientToGameDto>(startGameDto);
@@ -172,7 +170,6 @@ public class ConnectionWithWsClient(Type connectionManagerType) : WebApplication
         var startGameDto = new ClientWantsToStartAGameDto()
         {
             requestId = Guid.NewGuid().ToString(),
-            TemplateId = _dbContext.Gametemplates.First().Id,
         };
         var startGameResult =
             await _wsClient.SendMessage<ClientWantsToStartAGameDto, ServerAddsClientToGameDto>(startGameDto);
@@ -191,10 +188,10 @@ public class ConnectionWithWsClient(Type connectionManagerType) : WebApplication
 
         var answer = new ClientAnswersQuestionDto()
         {
-            requestId = Guid.NewGuid().ToString(),
-            gameId = startGameResult.GameId,
-            optionId = serverSendsQuestionDto.Question.Questionoptions.First().Id,
-            questionId = serverSendsQuestionDto.Question.Id
+            // requestId = Guid.NewGuid().ToString(),
+            // gameId = startGameResult.GameId,
+            // optionId = serverSendsQuestionDto.Question.Questionoptions.First().Id,
+            // questionId = serverSendsQuestionDto.Question.Id
         };
         var answerResult = await _wsClient.SendMessage<ClientAnswersQuestionDto, ServerConfirmsDto>(answer);
         if (answerResult.Success != true)
@@ -206,7 +203,7 @@ public class ConnectionWithWsClient(Type connectionManagerType) : WebApplication
             ReferenceHandler = ReferenceHandler.IgnoreCycles,
             WriteIndented = true
         }));
-        if (serverEndsGameRoundDto.GameQuestionAnswersDTO
+        if (serverEndsGameRoundDto.GameStateDto
                 .Questions
                 .Select(q => q.PlayerAnswers)
                 .Count() != 1)

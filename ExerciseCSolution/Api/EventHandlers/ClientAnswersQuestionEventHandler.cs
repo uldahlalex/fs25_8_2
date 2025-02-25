@@ -12,14 +12,13 @@ public class ClientAnswersQuestionEventHandler(IConnectionManager connectionMana
     public override async Task Handle(ClientAnswersQuestionDto dto, IWebSocketConnection socket)
     {
         var clientId = await connectionManager.GetClientIdFromSocketId(socket.ConnectionInfo.Id.ToString());
-        var answer = context.Questionoptions.First(option => option.Id == dto.optionId);
-        context.Playeranswers.Add(new Playeranswer()
+        var answer = context.QuestionOptions.First(option => option.Id == dto.optionId);
+        context.PlayerAnswers.Add(new PlayerAnswer()
         {
-            Questionid = dto.questionId,
-            Answertimestamp = DateTime.Now,
-            Playerid = clientId,
-            Optionid = answer.Id,
-            Gameid = dto.gameId,
+            QuestionId = dto.questionId,
+            AnswerTimestamp = DateTime.UtcNow,
+            PlayerId = clientId,
+            SelectedOptionId = answer.Id,
         });
         context.SaveChanges();
         var confirm = new ServerConfirmsDto()

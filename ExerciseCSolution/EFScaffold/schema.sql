@@ -38,6 +38,6 @@ create table kahoot.player_answer (
                                       player_id text references kahoot.player(id),
                                       question_id text references kahoot.question(id),
                                       selected_option_id text references kahoot.question_option(id),
-                                      answer_timestamp timestamp default current_timestamp,
+                                      answer_timestamp timestamp with time zone,
                                       primary key (player_id, question_id)
 );

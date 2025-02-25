@@ -62,10 +62,7 @@ public partial class KahootContext : DbContext
 
             entity.Property(e => e.PlayerId).HasColumnName("player_id");
             entity.Property(e => e.QuestionId).HasColumnName("question_id");
-            entity.Property(e => e.AnswerTimestamp)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("answer_timestamp");
+            entity.Property(e => e.AnswerTimestamp).HasColumnName("answer_timestamp");
             entity.Property(e => e.SelectedOptionId).HasColumnName("selected_option_id");
 
             entity.HasOne(d => d.Player).WithMany(p => p.PlayerAnswers)

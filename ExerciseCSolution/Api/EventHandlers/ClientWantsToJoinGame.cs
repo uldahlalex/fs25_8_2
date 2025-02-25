@@ -24,7 +24,8 @@ public class ClientWantsToJoinGame(IConnectionManager connectionManager, KahootC
             Nickname = "Bob"
         };
         ctx.Players.Add(player);
-        player.Games.Add(game);
+        game.Players.Add(player);
+        
         ctx.SaveChanges();
         socket.SendDto(new ServerAddsClientToGameDto()
         {

@@ -60,7 +60,7 @@ public class Program
         using (var scope = app.Services.CreateScope())
         {
             var ctx = scope.ServiceProvider.GetRequiredService<KahootContext>();
-            new Seeder(ctx).Seed().GetAwaiter().GetResult();
+            new Seeder(ctx).SeedTestData().GetAwaiter().GetResult();
 
         }
         app.Services.GetRequiredService<CustomWebSocketServer>().Start(app);

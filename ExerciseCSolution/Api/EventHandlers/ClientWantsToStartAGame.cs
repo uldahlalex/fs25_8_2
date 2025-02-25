@@ -8,7 +8,6 @@ namespace Api.EventHandlers;
 
 public class ClientWantsToStartAGameDto : BaseDto
 {
-    public string TemplateId { get; set; }   
 }
 
 public class ClientWantsToStartAGame(ILogger<ClientWantsToStartAGame> logger, KahootContext ctx, IConnectionManager connectionManager)
@@ -20,21 +19,20 @@ public class ClientWantsToStartAGame(ILogger<ClientWantsToStartAGame> logger, Ka
         var player = new Player()
         {
             Id = clientId,
-            Nickname = "Bob"
+            Nickname = "Bob",
+            
         };
         ctx.Players.Add(player);
 
         var gameId = Guid.NewGuid().ToString();
         var game = new Game()
-        {
-            Templateid = ctx.Gametemplates.First().Id,
+        { 
             Id = gameId,
             Players = new List<Player>() {player}
         };
         ctx.Games.Add(game);
         ctx.SaveChanges();
         
-        //Add client to game
         await connectionManager.AddToTopic("games/" + gameId, clientId);
         var result = new ServerAddsClientToGameDto()
         {

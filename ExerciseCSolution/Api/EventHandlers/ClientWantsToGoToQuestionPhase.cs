@@ -20,86 +20,95 @@ public class ServerSendsQuestionDto : BaseDto
 
 public class ServerEndsGameRoundDto : BaseDto
 {
-    public GameQuestionAnswersDTO GameQuestionAnswersDTO { get; set; }
+    public GameStateDTO GameStateDto { get; set; }
 }
 
 public class ClientWantsToGoToQuestionPhase(
     IConnectionManager connectionManager,
     ILogger<ClientWantsToGoToQuestionPhase> logger,
-    KahootContext ctx, 
+    KahootContext ctx,
     IGameTimeProvider gameTimeProvider)
     : BaseEventHandler<ClientWantsToGoToQuestionPhaseDto>
 {
     public override async Task Handle(ClientWantsToGoToQuestionPhaseDto dto, IWebSocketConnection socket)
     {
-        var game = ctx.Games 
-            .Include(g => g.Gamerounds)
-            .Include(g => g.Template)
-            .ThenInclude(t => t.Questions)
-            .ThenInclude(q => q.Questionoptions)
-           .First(g => g.Id == dto.GameId);
-        
-        var answeredQuestions = game.Gamerounds.Select(g => g.Roundquestionid);
-        var nextQuestion = game.Template.Questions.Where(q => !answeredQuestions.Contains(q.Id)).FirstOrDefault();
+        var game = ctx.Games
+            .Include(g => g.Players)
+            .Include(g => g.Questions)
+            .ThenInclude(q => q.QuestionOptions)
+            .First(g => g.Id == dto.GameId);
 
+        // var answeredQuestions = game.Gamerounds.Select(g => g.Roundquestionid);
+        // var nextQuestion = game.Template.Questions.Where(q => !answeredQuestions.Contains(q.Id)).FirstOrDefault();
+
+        var nextQuestion = game.Questions
+            .OrderBy(q => q.QuestionIndex)
+            .FirstOrDefault(q => q.QuestionIndex > game.CurrentQuestionIndex);
+        
         if (nextQuestion is not null)
         {
-                 var nextQuestionDto = new ServerSendsQuestionDto()
-                    {
-                        Question = JsonSerializer.Deserialize<Question>(JsonSerializer.Serialize(nextQuestion, new JsonSerializerOptions() {ReferenceHandler = ReferenceHandler.IgnoreCycles})),
-                    };
-                    await connectionManager.BroadcastToTopic("games/" + dto.GameId, nextQuestionDto);  
-                                                                                                            
-                    await Task.Delay(gameTimeProvider.MilliSeconds);
+            var nextQuestionDto = new ServerSendsQuestionDto()
+            {
+                Question = JsonSerializer.Deserialize<Question>(JsonSerializer.Serialize(nextQuestion,
+                    new JsonSerializerOptions() { ReferenceHandler = ReferenceHandler.IgnoreCycles })),
+            };
+            await connectionManager.BroadcastToTopic("games/" + dto.GameId, nextQuestionDto);
+
+            await Task.Delay(gameTimeProvider.MilliSeconds);
         }
 
-        var result = await GetGameQuestionAnswers(dto.GameId);
-        
+        var result = await GetGameState(dto.GameId);
+
         ServerEndsGameRoundDto serverEndsGameRound = new ServerEndsGameRoundDto()
         {
-            GameQuestionAnswersDTO = result
-            
+            GameStateDto = result
         };
         var serialized = JsonSerializer.Serialize(serverEndsGameRound, new JsonSerializerOptions()
         {
             ReferenceHandler = ReferenceHandler.IgnoreCycles
         });
-        logger.LogInformation("Server ends game round: "+serialized);
-        await connectionManager.BroadcastToTopic<ServerEndsGameRoundDto>("games/" + dto.GameId, 
+        logger.LogInformation("Server ends game round: " + serialized);
+        await connectionManager.BroadcastToTopic<ServerEndsGameRoundDto>("games/" + dto.GameId,
             JsonSerializer.Deserialize<ServerEndsGameRoundDto>(serialized));
-
     }
-    
-    private async Task<GameQuestionAnswersDTO> GetGameQuestionAnswers(string gameId)
+
+    private async Task<GameStateDTO> GetGameState(string gameId)
     {
         var result = await ctx.Games
-            .Include(g => g.Playeranswers)
             .Where(g => g.Id == gameId)
-            .Select(g => new GameQuestionAnswersDTO
+            .Select(g => new GameStateDTO
             {
                 GameId = g.Id,
-                Questions = g.Gamerounds
-                    .Select(gr => gr.Roundquestion)
-                    .Select(q => new QuestionAnswersDTO
+                GameName = g.Name,
+                CurrentQuestionIndex = g.CurrentQuestionIndex ?? 0,
+                Players = g.Players
+                    .Select(p => new PlayerDTO
+                    {
+                        PlayerId = p.Id,
+                        Nickname = p.Nickname
+                    }).ToList(),
+                Questions = g.Questions
+                    .OrderBy(q => q.QuestionIndex)
+                    .Select(q => new QuestionDTO
                     {
                         QuestionId = q.Id,
-                        QuestionText = q.Questiontext,
-                        PlayerAnswers = q.Playeranswers
-                            .Where(pa => pa.Gameid == gameId)
-                            .Select(pa => new PlayerAnswerDTO
-                            {
-                                PlayerId = pa.Playerid,
-                                PlayerNickname = pa.Player.Nickname,
-                                SelectedOptionId = pa.Optionid,
-                                IsCorrect = pa.Option.Iscorrect,
-                                AnswerTimestamp = pa.Answertimestamp
-                            }).ToList(),
-                        Options = q.Questionoptions
+                        QuestionText = q.QuestionText,
+                        QuestionIndex = q.QuestionIndex,
+                        Options = q.QuestionOptions
                             .Select(qo => new QuestionOptionDTO
                             {
                                 OptionId = qo.Id,
-                                OptionText = qo.Optiontext,
-                                IsCorrect = qo.Iscorrect
+                                OptionText = qo.OptionText,
+                                IsCorrect = qo.IsCorrect
+                            }).ToList(),
+                        PlayerAnswers = q.PlayerAnswers
+                            .Select(pa => new PlayerAnswerDTO
+                            {
+                                PlayerId = pa.PlayerId,
+                                PlayerNickname = pa.Player.Nickname,
+                                SelectedOptionId = pa.SelectedOptionId,
+                                IsCorrect = pa.SelectedOption.IsCorrect,
+                                AnswerTimestamp = pa.AnswerTimestamp
                             }).ToList()
                     }).ToList()
             })
@@ -109,18 +118,35 @@ public class ClientWantsToGoToQuestionPhase(
     }
 }
 
-public class GameQuestionAnswersDTO
+public class GameStateDTO
 {
     public string GameId { get; set; }
-    public List<QuestionAnswersDTO> Questions { get; set; }
+    public string GameName { get; set; }
+    public int CurrentQuestionIndex { get; set; }
+    public List<PlayerDTO> Players { get; set; }
+    public List<QuestionDTO> Questions { get; set; }
 }
 
-public class QuestionAnswersDTO
+public class PlayerDTO
+{
+    public string PlayerId { get; set; }
+    public string Nickname { get; set; }
+}
+
+public class QuestionDTO
 {
     public string QuestionId { get; set; }
     public string QuestionText { get; set; }
-    public List<PlayerAnswerDTO> PlayerAnswers { get; set; }
+    public int QuestionIndex { get; set; }
     public List<QuestionOptionDTO> Options { get; set; }
+    public List<PlayerAnswerDTO> PlayerAnswers { get; set; }
+}
+
+public class QuestionOptionDTO
+{
+    public string OptionId { get; set; }
+    public string OptionText { get; set; }
+    public bool IsCorrect { get; set; }
 }
 
 public class PlayerAnswerDTO
@@ -130,11 +156,4 @@ public class PlayerAnswerDTO
     public string SelectedOptionId { get; set; }
     public bool IsCorrect { get; set; }
     public DateTime? AnswerTimestamp { get; set; }
-}
-
-public class QuestionOptionDTO
-{
-    public string OptionId { get; set; }
-    public string OptionText { get; set; }
-    public bool IsCorrect { get; set; }
 }
