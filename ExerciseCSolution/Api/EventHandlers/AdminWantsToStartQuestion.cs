@@ -39,6 +39,7 @@ public class AdminWantsToStartQuestion(
 {
     public override async Task Handle(AdminWantsToStartQuestionDto dto, IWebSocketConnection socket)
     {
+        #region region: sending an unanswered question if there are any left
         if(dto.Password != "ilovewebsockets")
             throw new Exception("Invalid pass");
         var game = ctx.Games
@@ -85,6 +86,8 @@ public class AdminWantsToStartQuestion(
         var question = ctx.Questions.First(q => q.Id == nextQuestion.QuestionId);
         question.Answered = true;
         ctx.SaveChanges();
+        #endregion
+        
         await Task.Delay(gameTimeProvider.MilliSeconds);
         await connectionManager.BroadcastToTopic("games/" + dto.GameId, new ServerEndsGameRoundDto()
         {
@@ -96,24 +99,6 @@ public class AdminWantsToStartQuestion(
             requestId = dto.requestId
         });
     }
-
-    private async Task<QuestionDTO> MapFromQuestionEntity(Question q)
-    {
-        return new QuestionDTO
-        {
-            QuestionId = q.Id,
-            QuestionText = q.QuestionText,
-            IsAnswered = q.Answered,
-            Options = q.QuestionOptions
-                .Select(qo => new QuestionOptionDTO
-                {
-                    OptionId = qo.Id,
-                    OptionText = qo.OptionText,
-                    IsCorrect = qo.IsCorrect
-                }).ToList(),
-        };
-    }
-
     private async Task<GameStateDTO> GetGameState(string gameId)
     {
         var result = await ctx.Players
@@ -133,6 +118,24 @@ public class AdminWantsToStartQuestion(
         };
     
     }
+    private async Task<QuestionDTO> MapFromQuestionEntity(Question q)
+    {
+        return new QuestionDTO
+        {
+            QuestionId = q.Id,
+            QuestionText = q.QuestionText,
+            IsAnswered = q.Answered,
+            Options = q.QuestionOptions
+                .Select(qo => new QuestionOptionDTO
+                {
+                    OptionId = qo.Id,
+                    OptionText = qo.OptionText,
+                    IsCorrect = qo.IsCorrect
+                }).ToList(),
+        };
+    }
+
+ 
 }
 
 
