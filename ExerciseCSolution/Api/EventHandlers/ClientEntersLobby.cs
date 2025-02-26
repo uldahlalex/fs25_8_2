@@ -10,15 +10,17 @@ public class ServerHasClientInLobbyDto : BaseDto
     public List<string> AllClientIds { get; set; }
 }
 
-public class ClientEntersLobbyEventHandler(IConnectionManager connectionManager) : BaseEventHandler<ClientEntersLobbyDto>
+public class ClientEntersLobbyEventHandler(IConnectionManager connectionManager) 
+    : BaseEventHandler<ClientEntersLobbyDto>
 {
-    public override async Task Handle(ClientEntersLobbyDto dto, IWebSocketConnection socket)
+    public override async Task Handle(ClientEntersLobbyDto dto, 
+        IWebSocketConnection socket)
     {
-        var clientId = await connectionManager.GetClientIdFromSocketId(socket.ConnectionInfo.Id.ToString());
+        var clientId = await connectionManager.GetClientIdFromSocketId(
+            socket.ConnectionInfo.Id.ToString());
         await connectionManager.AddToTopic("lobby", clientId);
-        var allC = await connectionManager.GetMembersFromTopicId("lobby");
+        var allClients = await connectionManager.GetMembersFromTopicId("lobby");
         await connectionManager.BroadcastToTopic("lobby",
-            new ServerHasClientInLobbyDto() { AllClientIds = allC });
-    
+            new ServerHasClientInLobbyDto() { AllClientIds = allClients });
     }
 }

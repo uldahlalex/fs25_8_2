@@ -115,7 +115,6 @@ public class DictionaryConnectionManager(ILogger<DictionaryConnectionManager> lo
             logger.LogInformation($"Removed old connection {oldSocketId} for client {clientId}");
         }
 
-        // Add new connection
         ConnectionIdToSocket[clientId] = socket;
         SocketToConnectionId[socket.ConnectionInfo.Id.ToString()] = clientId;
 
@@ -127,7 +126,6 @@ public class DictionaryConnectionManager(ILogger<DictionaryConnectionManager> lo
     {
         var socketId = socket.ConnectionInfo.Id.ToString();
 
-        // Only remove if this is the current socket for this client
         if (ConnectionIdToSocket.TryGetValue(clientId, out var currentSocket) &&
             currentSocket.ConnectionInfo.Id.ToString() == socketId)
         {

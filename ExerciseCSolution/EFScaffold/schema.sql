@@ -1,13 +1,11 @@
 drop schema if exists kahoot cascade;
 create schema if not exists kahoot;
 
--- A game represents a quiz/competition
 create table kahoot.game (
                              id text primary key,
                              name text not null
 );
 
--- Questions belonging to a game
 create table kahoot.question (
                                  id text primary key,
                                  game_id text references kahoot.game(id),
@@ -15,7 +13,6 @@ create table kahoot.question (
                                  answered boolean not null default false
 );
 
--- Options for each question
 create table kahoot.question_option (
                                         id text primary key,
                                         question_id text references kahoot.question(id),
@@ -23,7 +20,6 @@ create table kahoot.question_option (
                                         is_correct boolean not null
 );
 
--- Players in a game
 create table kahoot.player (
                                id text primary key,
                                game_id text references kahoot.game(id),
@@ -31,7 +27,6 @@ create table kahoot.player (
                                constraint unique_nickname_per_game unique(game_id, nickname)
 );
 
--- Player answers
 create table kahoot.player_answer (
                                       player_id text references kahoot.player(id),
                                       question_id text references kahoot.question(id),

@@ -7,11 +7,13 @@ using WebSocketBoilerplate;
 
 namespace Api.EventHandlers;
 
-public class ClientAnswersQuestionEventHandler(IConnectionManager connectionManager, KahootContext context) : BaseEventHandler<ClientAnswersQuestionDto>
+public class ClientAnswersQuestionEventHandler(IConnectionManager connectionManager, 
+    KahootContext context) : BaseEventHandler<ClientAnswersQuestionDto>
 {
     public override async Task Handle(ClientAnswersQuestionDto dto, IWebSocketConnection socket)
     {
-        var clientId = await connectionManager.GetClientIdFromSocketId(socket.ConnectionInfo.Id.ToString());
+        var clientId = await connectionManager.GetClientIdFromSocketId(
+            socket.ConnectionInfo.Id.ToString());
         var answer = context.QuestionOptions.First(option => option.Id == dto.optionId);
         context.PlayerAnswers.Add(new PlayerAnswer()
         {
@@ -27,6 +29,5 @@ public class ClientAnswersQuestionEventHandler(IConnectionManager connectionMana
             requestId = dto.requestId
         };
         socket.SendDto(confirm);
-
     }
 }

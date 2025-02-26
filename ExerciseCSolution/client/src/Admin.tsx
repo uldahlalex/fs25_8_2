@@ -15,14 +15,15 @@ export default function Admin() {
     const [gameId, setGameId] = useState<string | undefined>();
     const [password, setPassword] = useState<string>('');
     
-    const {onMessage, sendRequest, send,readyState}= useWsClient();
+    const { sendRequest}= useWsClient();
     
     const startGame= async () => {
         const dto: AdminWantsToStartGameDto = {
             password: password,
             eventType: StringConstants.AdminWantsToStartGameDto
         }
-        const result = await sendRequest<AdminWantsToStartGameDto, AdminHasStartedGameDto>(dto, StringConstants.AdminHasStartedGameDto);
+        const result = await sendRequest<AdminWantsToStartGameDto, AdminHasStartedGameDto>
+        (dto, StringConstants.AdminHasStartedGameDto);
         setGameId(result.gameId);
         toast('Game has now begun!')
     }

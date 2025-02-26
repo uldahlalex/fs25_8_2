@@ -24,9 +24,7 @@ public class AdminWantsToStartGame(
 
         var gameId = await seeder.SeedDefaultGameReturnId();
         var game = ctx.Games.First(id => id.Id == gameId);
-
         var clients = await connectionManager.GetMembersFromTopicId("lobby");
-
         foreach (var client in clients)
         {
             await connectionManager.AddToTopic("games/" + game.Id, client);
@@ -37,11 +35,7 @@ public class AdminWantsToStartGame(
                 ctx.SaveChanges();
             }
         }
-
-        var serverAddsClientToGameDto = new ServerAddsClientToGameDto()
-        {
-            GameId = game.Id,
-        };
+        var serverAddsClientToGameDto = new ServerAddsClientToGameDto() { GameId = game.Id, };
         await connectionManager.BroadcastToTopic("games/" + game.Id, serverAddsClientToGameDto);
         socket.SendDto(new AdminHasStartedGameDto() { GameId = game.Id, requestId = dto.requestId });
     }
