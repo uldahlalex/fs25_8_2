@@ -12,21 +12,19 @@ import {send} from "vite";
 export default function Lobby() {
     
     const {onMessage, sendRequest, send, readyState} = useWsClient();
-    const [clients, setClients] = useState<string[]>([])
+    const [clients, setClients] = useState<string[]>([''])
 
     useEffect(() => {
         if (readyState != 1)
             return;
-        const unsub = onMessage<ServerHasClientInLobbyDto>(StringConstants.ServerHasClientInLobbyDto, (dto) => {
+         onMessage<ServerHasClientInLobbyDto>(StringConstants.ServerHasClientInLobbyDto, (dto) => {
             setClients(dto.allClientIds!)
-            console.log(dto.allClientIds)
         })
         
-        const un = onMessage<MemberHasLeftDto>(StringConstants.MemberHasLeftDto, (dto) => {
-            const duplicate = [...clients]
-            const filtered = duplicate.filter(c => c != dto.memberId)
+        onMessage<MemberHasLeftDto>(StringConstants.MemberHasLeftDto, (dto) => {
+            const duplicate =  [...clients]
             toast("Client "+dto.memberId+" has left!");
-            setClients([...clients])
+            setClients(duplicate.filter(c => c != dto.memberId))
         })
         const enterLobbyDto: ClientEntersLobbyDto = {
             eventType: StringConstants.ClientEntersLobbyDto,
@@ -41,5 +39,6 @@ export default function Lobby() {
         {
             clients.map(c => <div key={c}>{c}</div>)
         }
+
     </>)
 }

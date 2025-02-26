@@ -17,22 +17,20 @@ export default function Game() {
     const [gameId, setGameId] = useState<string | undefined>(undefined);
     const [currentQuestion, setCurrentQuestion] = useState<QuestionDTO | undefined>(undefined)
     const [gameState, setGameState] = useState<GameStateDTO | undefined>(undefined)
-
-
+    
     useEffect(() => {
         if (readyState != 1)
             return;
-        const unsubscribe = onMessage<ServerSendsQuestionDto>(StringConstants.ServerSendsQuestionDto, (dto) => {
+        onMessage<ServerSendsQuestionDto>(StringConstants.ServerSendsQuestionDto, (dto) => {
             setCurrentQuestion(dto.question)
             toast('NEW QUESTION!!!')
         });
-        const unsub = onMessage<ServerEndsGameDto>(StringConstants.ServerEndsGameDto, (dto) => {
+        onMessage<ServerEndsGameDto>(StringConstants.ServerEndsGameDto, (dto) => {
             toast("game has ended")
             setCurrentQuestion(undefined)
             setGameState(dto.gameStateDto)
         })
-
-        const unsu = onMessage<ServerEndsGameRoundDto>(StringConstants.ServerEndsGameRoundDto, (dto) => {
+        onMessage<ServerEndsGameRoundDto>(StringConstants.ServerEndsGameRoundDto, (dto) => {
             toast("game round has ended")
             setCurrentQuestion(undefined)
             setGameState(dto.gameStateDto)
@@ -41,42 +39,42 @@ export default function Game() {
 
     return (
         <>
-        <div className="w-full h-52 flex items-center justify-center flex-col">
+            <div className="w-full h-52 flex items-center justify-center flex-col">
 
-            {
-                currentQuestion ?
+                {
+                    currentQuestion ?
 
-                    <>
+                        <>
 
-                        <div>{currentQuestion.questionText}</div>
-                        {currentQuestion.options?.map(opt =>
-                        <div key={opt.optionId}>
-                            <button className="btn btn-secondary" onClick={() => {
-                                const dto: ClientAnswersQuestionDto = {
-                                    gameId: gameId,
-                                    optionId: opt.optionId,
-                                    eventType: StringConstants.ClientAnswersQuestionDto,
-                                    questionId: currentQuestion.questionId,
+                            <div>{currentQuestion.questionText}</div>
+                            {currentQuestion.options?.map(opt =>
+                                <div key={opt.optionId}>
+                                    <button className="btn btn-secondary" onClick={() => {
+                                        const dto: ClientAnswersQuestionDto = {
+                                            gameId: gameId,
+                                            optionId: opt.optionId,
+                                            eventType: StringConstants.ClientAnswersQuestionDto,
+                                            questionId: currentQuestion.questionId,
 
-                                };
-                                send<ClientAnswersQuestionDto>(dto);
+                                        };
+                                        send<ClientAnswersQuestionDto>(dto);
 
-                            }}>{opt.optionText}</button>
+                                    }}>{opt.optionText}</button>
 
-                        </div>
-                        ) }
-                    </>
-                  : gameState ? <div>{JSON.stringify(gameState)}</div>
-        :
-        <div>Waiting for question...</div>
+                                </div>
+                            )}
+                        </>
+                        : gameState ? <div>{JSON.stringify(gameState)}</div>
+                            :
+                            <div>Waiting for question...</div>
 
 
-        }
+                }
 
-        </div>
+            </div>
 
-</>
+        </>
 
-)
-    ;
+    )
+        ;
 }

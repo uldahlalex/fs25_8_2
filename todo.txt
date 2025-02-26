@@ -1,12 +1,9 @@
 Diagram: https://drive.google.com/file/d/1Y39Hbn3aKaJ3jaLjCazJ48RSmsiGYo6m/view?usp=sharing
 
-
-
-Forberedelse i dag:
-- Lav demo færdig
-- Lave slides og præsenter relevant teori for dagens delmål
-- Reconnect cases for redis state restore
+Aktuelt:
+- filter bug
 
 
 Forberedelse til fredag:
 - Testing teori
+- deployment

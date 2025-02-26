@@ -22,7 +22,8 @@ export default function Admin() {
             password: password,
             eventType: StringConstants.AdminWantsToStartGameDto
         }
-        const result = await sendRequest<AdminWantsToStartGameDto, AdminHasStartedGameDto>
+        const result = await sendRequest <AdminWantsToStartGameDto, 
+            AdminHasStartedGameDto>
         (dto, StringConstants.AdminHasStartedGameDto);
         setGameId(result.gameId);
         toast('Game has now begun!')
