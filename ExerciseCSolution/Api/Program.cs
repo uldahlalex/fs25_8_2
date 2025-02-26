@@ -57,7 +57,7 @@ public class Program
         var app = builder.Build();
         app.UseOpenApi();
         app.MapScalarApiReference();
-         // app.GenerateTypeScriptClient("/../client/src/generated-client.ts").GetAwaiter().GetResult();
+         app.GenerateTypeScriptClient("/../client/src/generated-client.ts").GetAwaiter().GetResult();
 
         app.Services.GetRequiredService<CustomWebSocketServer>().Start(app);
         app.Urls.Clear();
