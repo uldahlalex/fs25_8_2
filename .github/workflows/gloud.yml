@@ -2,10 +2,6 @@ name: Deploy to Google Cloud Run
 
 on:
   workflow_dispatch:  
-  push:
-    branches:
-      - main 
-      - master
 
 jobs:
   deploy:
