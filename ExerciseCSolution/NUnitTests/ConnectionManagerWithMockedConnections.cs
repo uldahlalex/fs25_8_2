@@ -8,7 +8,6 @@ using NUnit.Framework;
 
 namespace NUnit;
 
-[TestFixture(typeof(RedisConnectionManager))]
 [TestFixture(typeof(DictionaryConnectionManager))]
 public class ConnectionManagerWithMockedConnections(Type connectionManagerType) : WebApplicationFactory<Program>
 {

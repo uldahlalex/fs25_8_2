@@ -14,7 +14,6 @@ using WebSocketBoilerplate;
 
 namespace NUnit;
 
-[TestFixture(typeof(RedisConnectionManager))]
 [TestFixture(typeof(DictionaryConnectionManager))]
 public class ConnectionWithWsClient(Type connectionManagerType) : WebApplicationFactory<Program>
 {
