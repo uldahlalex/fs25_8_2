@@ -1,5 +1,4 @@
 import {WsClientProvider} from "ws-request-hook";
-import {BrowserRouter, Route, Router, Routes} from "react-router";
 import Game from "./Game.tsx";
 import {Toaster} from "react-hot-toast";
 import Admin from "./Admin.tsx";
