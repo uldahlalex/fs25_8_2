@@ -1,35 +1,29 @@
-
-# Redis For Scaling WebSocket APIs
-
-
-#### Remote repo for today's lesson: `https://github.com/uldahlalex/fs25_8_2` 
-
-### Agenda
-
-- 08:15: Presentation
-
-### Topics:
-
-- Redis
-- Redis gui browser
-- Cloud-first development configuration (with multiple databases)
-
-### Exercises
+## Deployment
 
 
-<!-- #region ex A -->
-
-<details>
-    <summary>Exercise A: Provisioning an browsing</summary>
+### Common problems:
 
 
-<div style="margin: 20px; padding: 5px;  box-shadow: 10px 10px 10px grey;">
+#### Policy problem:
 
-## Task:
+![alt text](image-3.png)
 
-</div>
-</details>
+Solution: Here you can simply copy the command it gives you and execute in a terminal with the gcloud CLI installed.
 
-<!-- #endregion ex A -->
+In my case it is:
 
-_______
+```
+gcloud beta run services add-iam-policy-binding --region=europe-north1 --member=allUsers --role=roles/run.invoker kahoot 
+```
+
+#### An environment variable isn't properly configured
+
+![alt text](image-4.png)
+
+Solution:
+- Set the repository secret in settings page with a capitalized secret name.
+- In your workflow make an environment variable prefixed with APPOPTIONS__{whatever you call it} (yes, that is 2 underscores)
+Like this.
+
+![alt text](image-5.png)
+![alt text](image-6.png)
