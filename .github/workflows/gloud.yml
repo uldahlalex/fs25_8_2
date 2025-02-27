@@ -35,5 +35,4 @@ jobs:
           env_vars: |
             APPOPTIONS__DbConnectionString=${{ secrets.DBCONNECTIONSTRING }}
 
-      - name: Show Output
-        run: echo "🚀 Service deployed to: ${{ steps.deploy.outputs.url }}"
+      - run: echo "${{ steps.deploy.outputs.url }}"
