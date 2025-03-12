@@ -1,4 +1,0 @@
-
-Forberedelse til fredag:
-- Testing teori
-- deployment

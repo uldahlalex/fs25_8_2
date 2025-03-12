@@ -23,8 +23,11 @@ public class Program
         var appOptions = builder.Services.BuildServiceProvider()
             .GetRequiredService<IOptionsMonitor<AppOptions>>()
             .CurrentValue;
-        
-        Validator.ValidateObject(appOptions, new ValidationContext(appOptions), true);
+        ICollection<ValidationResult> results = new List<ValidationResult>();
+        var validated = Validator.TryValidateObject(appOptions, new ValidationContext(appOptions), results, true);
+        if(!validated)
+            throw new Exception($"hey buddy, alex here. You're probably missing an environment variable / appsettings.json stuff / repo secret on github. Here's the technical error: " +
+                                $"{string.Join(", ", results.Select(r => r.ErrorMessage))}");
         
         builder.Services.AddDbContext<KahootContext>(options =>
         {
